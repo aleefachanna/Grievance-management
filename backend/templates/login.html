@@ -1,0 +1,101 @@
+<!-- templates/login.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .messages {
+            margin-bottom: 15px;
+        }
+
+        .messages .error {
+            color: #d93025;
+        }
+
+        .messages .success {
+            color: #188038;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Department Login</h2>
+
+        <!-- Display messages -->
+        <div class="messages">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <label for="depid">Department ID</label>
+            <input type="text" id="depid" name="Dep_id" placeholder="Enter Department ID" required>
+
+            <label for="employeeid">Employee ID</label>
+            <input type="text" id="employeeid" name="Emp_id" placeholder="Enter Employee ID" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</body>
+</html>
