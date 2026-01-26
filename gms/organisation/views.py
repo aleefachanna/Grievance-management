@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import OrganisationForm
 
-def organisation_create(request):
+def create_organisation(request):
     if request.method == 'POST':
         form = OrganisationForm(request.POST)
         if form.is_valid():
@@ -12,5 +12,5 @@ def organisation_create(request):
 
     return render(request, 'organisation/form.html', {'form': form})
 
-def success(request):
+def organisation_success(request):
     return render(request, 'organisation/success.html')

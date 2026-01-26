@@ -6,8 +6,15 @@ class OrganisationForm(forms.ModelForm):
         model = Organisation
         fields = [
             'company_name',
-            'address',
-            'contact_email',
+            'organisation_type',
+            'industry',
+            'official_email',
             'contact_phone',
-            'website'
+            'address',
+            'city',
+            'state',
+            'country',
+            'admin_name',
+            'admin_email',
+            'is_active'
         ]
