@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Submit a Grievance</h2>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="p-4 mb-4 bg-green-100 text-green-700 rounded">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<form method="POST" class="space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block font-semibold">Your Email</label>
+        <input type="email" name="email" required class="w-full border p-2 rounded">
+    </div>
+
+    <div>
+        <label class="block font-semibold">Select Organisation</label>
+        <select name="organisation" required class="w-full border p-2 rounded">
+            <option value="">-- Choose --</option>
+            {% for org in organisations %}
+                <option value="{{ org.id }}">{{ org.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label class="block font-semibold">Describe your issue</label>
+        <textarea name="description" rows="5" required class="w-full border p-2 rounded"></textarea>
+    </div>
+
+    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold transition">
+        Submit Complaint
+    </button>
+</form>
+{% endblock %}

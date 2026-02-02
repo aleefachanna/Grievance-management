@@ -1,12 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+from organisation.models import Organisation
 
 # 1. Define Organisation first (because Department and Complaint depend on it)
-class Organisation(models.Model):
-    name = models.CharField(max_length=255)
-    OrgId = models.CharField(max_length=50, unique=True)
-    def __str__(self):
-        return self.name
+
 
 # 2. Define Department second (it depends on Organisation)
 class Department(models.Model):
