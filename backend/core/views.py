@@ -1,5 +1,8 @@
 
-
+import uuid
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.http import JsonResponse
 # Use relative imports (the dot means 'this current app folder')
 from datetime import timezone
 
@@ -42,6 +45,7 @@ def submit_complaint(request):
         org_id = request.POST.get('organisation')
         description = request.POST.get('description')
         email = request.POST.get('email')
+
         organisation = Organisation.objects.get(id=org_id)
         dept_queryset = Department.objects.filter(organisation=organisation)
         dept_names = list(dept_queryset.values_list('name', flat=True))
@@ -76,7 +80,7 @@ def submit_complaint(request):
             else:
                 complaint.departments.clear()
 
-            messages.success(request,departments, "Complaint submitted and analyzed successfully!")
+            messages.success(request, "Complaint submitted and analyzed successfully!")
 
         except Exception as e:
             # ✅ Complaint still exists even if AI fails
@@ -89,11 +93,35 @@ def submit_complaint(request):
                 f"Complaint submitted, but AI analysis failed: {e}"
             )
 
+        # ✅ Send confirmation email
+        email_body = f"""
+Hello,
+
+Your complaint has been registered successfully.
+
+Complaint ID: {complaint.complaint_id}
+
+Organisation: {organisation.name}
+Severity Level: {complaint.severity}
+
+We will review your complaint shortly.
+
+Thank you.
+"""
+
+        mail = EmailMessage(
+            subject="Complaint Registered Successfully",
+            body=email_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email],
+        )
+
+        mail.send(fail_silently=True)
+
         return redirect('submit_complaint')
 
     organisations = Organisation.objects.all()
     return render(request, 'submit_form.html', {'organisations': organisations})
-
 @login_required
 def dep_dashboard(request):
     try:
