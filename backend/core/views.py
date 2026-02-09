@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from datetime import timezone
 
 from django.http import request
-from .models import DepartmentWork, Organisation, Department, Complaint, Employee
+from .models import DepartmentWork, Department, Complaint, Employee
 from django.contrib.auth import login
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -16,7 +16,7 @@ from django.utils import timezone
 # Ensure your file is named service.py or utils.py and match it here
 from .service import classify_and_summarize, summarize_department_work, ai_assign_works
 from .models import Employee  # Assuming your model is named Employee
-
+from organisation.models import Organisation
 def dep_login(request):
     if request.method == 'POST':
         dep_id = request.POST.get('Dep_id')
