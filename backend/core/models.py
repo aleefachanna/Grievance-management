@@ -18,7 +18,7 @@ class DepartmentWork(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-
+    employees = models.ManyToManyField('Employee', blank=True)
     STATUS_CHOICES = [
         ("PENDING", "Pending"),
         ("WORKING", "Working"),
@@ -32,6 +32,7 @@ class DepartmentWork(models.Model):
 
 # 3. Define Complaint last (it depends on both Organisation and Department)
 class Complaint(models.Model):
+
     SEVERITY_CHOICES = [
         ('0', '0 - None'),
         ('1', '1 - Very Low'),
@@ -40,23 +41,13 @@ class Complaint(models.Model):
         ('4', '4 - High'),
         ('5', '5 - Critical'),
     ]
-    severity = models.CharField(
-        max_length=1,
-        choices=SEVERITY_CHOICES,
-        blank=True,   # optional
-        default='0'
-    )
+
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('WORKING', 'Working On'),
         ('CLOSED', 'Closed'),
     ]
 
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='PENDING'
-    )
     complaint_id = models.CharField(max_length=50, unique=True, blank=True)
     user_email = models.EmailField()
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
@@ -96,15 +87,21 @@ class Employee(models.Model):
     name = models.CharField(max_length=100)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     employeeid = models.CharField(max_length=20, unique=True)
-
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     def __str__(self):
         return self.name
 
 class Manager(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    managerid = models.CharField(max_length=20, unique=True)
+    manager_id = models.CharField(max_length=20, unique=True)
+    password = models.CharField(max_length=128)
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
 
     def __str__(self):
         return self.name

@@ -1,31 +1,45 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 function Home() {
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-            <h1 className="text-4xl font-bold mb-8 text-blue-900">Grievance Management System</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Public Path */}
-                <div className="p-8 bg-white shadow-lg rounded-xl text-center border-t-4 border-blue-600">
-                    <h2 className="text-xl font-semibold mb-4">Citizens</h2>
-                    <p className="text-gray-600 mb-6">File a new complaint and get AI-powered severity analysis.</p>
-                    <Link to="/submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                        Submit Complaint
-                    </Link>
-                </div>
+  const navigate = useNavigate();
 
-                {/* Employee Path */}
-                <div className="p-8 bg-white shadow-lg rounded-xl text-center border-t-4 border-green-600">
-                    <h2 className="text-xl font-semibold mb-4">Department Staff</h2>
-                    <p className="text-gray-600 mb-6">Login to manage complaints, assign work, and view AI reports.</p>
-                    <Link to="/login" className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
-                        Department Login
-                    </Link>
-                </div>
+  const cards = [
+    { title: "Submit Complaint", path: "/submit" },
+    { title: "Track Complaint", path: "/track" },
+    { title: "Search Organisations", path: "/search" },
+    { title: "View Organisation", path: "/organisation" },
+    { title: "Employee Login", path: "/employee-login" },
+    { title: "Manager Login", path: "/manager-login" },
+    { title: "Create Organisation", path: "/create-org" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10">
+      <div className="max-w-5xl mx-auto text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-3">
+          Complaint Management System
+        </h1>
+        <p className="text-gray-600 mb-10">
+          Smart grievance tracking & organisation management
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {cards.map((card, index) => (
+            <div
+              key={index}
+              onClick={() => navigate(card.path)}
+              className="bg-white rounded-2xl shadow-md p-6 cursor-pointer
+                         hover:shadow-xl hover:scale-105 transition duration-300"
+            >
+              <h2 className="text-lg font-semibold text-gray-700">
+                {card.title}
+              </h2>
             </div>
+          ))}
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default Home;

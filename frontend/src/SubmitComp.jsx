@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Added for the Home link
 import api from './api';
 
-function SubmitForm() {
+function SubmitComp() {
     const [organisations, setOrganisations] = useState([]);
     const [formData, setFormData] = useState({
         email: '',
@@ -99,4 +99,4 @@ function SubmitForm() {
     );
 }
 
-export default SubmitForm;
+export default SubmitComp;

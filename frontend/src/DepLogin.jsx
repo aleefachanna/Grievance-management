@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import this!
 import api from './api';
 
-function Login() {
+function DepLogin() {
     const [credentials, setCredentials] = useState({ Dep_id: '', Emp_id: '' });
     const navigate = useNavigate(); // Initialize the navigator
 
     const handleLogin = async () => {
         try {
             // Ensure the keys match exactly what your Django View expects (Dep_id, Emp_id)
-            const res = await api.post('login/', credentials);
+            const res = await api.post('emplogin/', credentials);
             
             localStorage.setItem('access_token', res.data.access);
             localStorage.setItem('refresh_token', res.data.refresh);
             
             // Redirect using React Router instead of refreshing the whole browser
-            navigate('/dashboard'); 
+            navigate('/depdashboard'); 
         } catch (err) {
             console.error(err);
             alert("Invalid Department ID or Employee ID.");
@@ -51,4 +51,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default DepLogin;

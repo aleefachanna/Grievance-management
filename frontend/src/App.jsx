@@ -1,38 +1,31 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './Home'; // New Import
-import Login from './Login';
-import Dashboard from './Dashboard';
-import SubmitForm from './SubmitForm';
-
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('access_token');
-  return token ? children : <Navigate to="/login" />;
-};
-
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./Home";
+import Submit from "./SubmitComp";
+import Track from "./TrackComplaint";
+import Search from "./SearchOrg";
+import Organisation from "./OrgView";//
+import DepLogin from "./DepLogin";
+import ManagerLogin from "./ManagerLogin";//
+import CreateOrg from "./CreateOrg";//
+import DepDashBoard from "./DepDashboard";//
+import ManagerDash from "./ManagerDash";
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* The Landing Page */}
-        <Route path="/" element={<Home />} />
-        
-        {/* Public Submit Page */}
-        <Route path="/submit" element={<SubmitForm />} />
-        
-        {/* Login Page */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected Dashboard - Redirects to login if not authenticated */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/submit" element={<Submit />} />
+        <Route path="/track" element={<Track />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/org/:slug" element={<Organisation />} />
+        <Route path="/employee-login" element={<DepLogin />} />
+        <Route path="/manager-login" element={<ManagerLogin />} />
+        <Route path="/create-org" element={<CreateOrg />} />
+        <Route path="/depdashboard" element={<DepDashBoard />} />
+        <Route path="/managerdashboard" element={<ManagerDash />} />
+
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
