@@ -16,6 +16,14 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'vathidhi0@gmail.com'
+EMAIL_HOST_PASSWORD = 'pimh veen uvia wefv'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'organisation',
 ]
 
 MIDDLEWARE = [
@@ -79,14 +88,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.parse(
-        os.getenv("DB_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 # Password validation
