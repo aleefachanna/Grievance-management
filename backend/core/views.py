@@ -14,8 +14,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 # Ensure your file is named service.py or utils.py and match it here
-from .service import classify_and_summarize, summarize_department_work, ai_assign_works
-from .models import Employee  # Assuming your model is named Employee
+from .service import classify_and_summarize, summarize_department_work, ai_assign_works  # Assuming your model is named Employee
 from organisation.models import Organisation
 def dep_login(request):
     if request.method == 'POST':
@@ -116,12 +115,13 @@ Thank you.
             to=[email],
         )
 
-        mail.send(fail_silently=True)
+        mail.send(fail_silently=False)
 
         return redirect('submit_complaint')
 
     organisations = Organisation.objects.all()
     return render(request, 'submit_form.html', {'organisations': organisations})
+
 @login_required
 def dep_dashboard(request):
     try:
@@ -151,6 +151,7 @@ def dep_dashboard(request):
             handle_create_work(request, department)
         elif action == "assign_work":
             handle_assign_work(request, department)
+        
         
         # If the action wasn't 'analyze' (which needs to stay on page to show report), 
         # redirect to refresh and prevent double-POST.
@@ -202,10 +203,6 @@ def handle_complete_work(request, department):
     work.completed_at = timezone.now()
     work.save()
 
-    for c in work.complaint_set.all():
-        c.status = "CLOSED"
-        c.closed_at = timezone.now()
-        c.save()
 
 
 def handle_analyze(department, complaints):

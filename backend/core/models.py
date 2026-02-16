@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 from organisation.models import Organisation
-
+from django.utils import timezone
 # 1. Define Organisation first (because Department and Complaint depend on it)
 
 
@@ -109,5 +109,3 @@ class Manager(models.Model):
     def __str__(self):
         return self.name
 
-    def __str__(self):
-        return self.title
