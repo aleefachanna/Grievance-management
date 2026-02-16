@@ -14,6 +14,14 @@ from django.utils import timezone
 from .service import classify_and_summarize, summarize_department_work, ai_assign_works
 from .models import Employee  # Assuming your model is named Employee
 from organisation.models import Organisation
+#from rest_framework.decorators import api_view, permission_classes
+#from rest_framework.permissions import IsAuthenticated
+#from rest_framework.response import Response
+from .models import Complaint, Manager
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from core.models import Complaint, Manager
+from django.http import HttpResponse
 def dep_login(request):
     if request.method == 'POST':
         dep_id = request.POST.get('Dep_id')
@@ -96,6 +104,7 @@ def submit_complaint(request):
 
 @login_required
 def dep_dashboard(request):
+    return render(request,"organisation/dashboard.html",data)
     try:
         employee = Employee.objects.get(user=request.user)
         department = employee.department
@@ -239,3 +248,26 @@ def handle_assign_work(request, department):
 
     if department in complaint.departments.all():
         complaint.works.add(work)
+@login_required
+def organisation_dashboard(request):
+    try:
+        manager = Manager.objects.get(user=request.user)
+    except Manager.DoesNotExist:
+        return render(
+            request,
+            "organisation/not_authorized.html",
+            status=403
+        )
+
+    org = manager.organisation
+    complaints = Complaint.objects.filter(organisation=org)
+
+    context = {
+        "organisation": org.name,
+        "total_complaints": complaints.count(),
+        "pending": complaints.filter(status="PENDING").count(),
+        "working": complaints.filter(status="WORKING").count(),
+        "closed": complaints.filter(status="CLOSED").count(),
+    }
+
+    return render(request,"organisation/dashboard.html",context)

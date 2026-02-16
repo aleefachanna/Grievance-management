@@ -5,6 +5,7 @@ from organisation.models import Organisation
 # 1. Define Organisation first (because Department and Complaint depend on it)
 
 
+
 # 2. Define Department second (it depends on Organisation)
 class Department(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='departments')
@@ -91,4 +92,4 @@ class Manager(models.Model):
         return self.name
 
     def __str__(self):
-        return self.title
+        return f"{self.user.username} - {self.organisation.name}"
