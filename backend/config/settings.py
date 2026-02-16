@@ -16,6 +16,14 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'vathidhi0@gmail.com'
+EMAIL_HOST_PASSWORD = 'pimh veen uvia wefv'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,8 +54,13 @@ INSTALLED_APPS = [
     'core',
     'organisation',
     'rest_framework',
+    'corsheaders',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -56,8 +69,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

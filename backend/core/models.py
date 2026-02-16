@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 from organisation.models import Organisation
-
+from django.utils import timezone
 # 1. Define Organisation first (because Department and Complaint depend on it)
 
 
@@ -32,14 +33,6 @@ class DepartmentWork(models.Model):
 
 # 3. Define Complaint last (it depends on both Organisation and Department)
 class Complaint(models.Model):
-    user_email = models.EmailField()
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    departments = models.ManyToManyField(
-    'Department',
-    blank=True
-)
-
-    description = models.TextField()
     SEVERITY_CHOICES = [
         ('0', '0 - None'),
         ('1', '1 - Very Low'),
@@ -48,14 +41,12 @@ class Complaint(models.Model):
         ('4', '4 - High'),
         ('5', '5 - Critical'),
     ]
-
     severity = models.CharField(
         max_length=1,
         choices=SEVERITY_CHOICES,
         blank=True,   # optional
         default='0'
     )
-    ai_summary = models.TextField(blank=True)
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('WORKING', 'Working On'),
@@ -67,12 +58,40 @@ class Complaint(models.Model):
         choices=STATUS_CHOICES,
         default='PENDING'
     )
+    complaint_id = models.CharField(max_length=50, unique=True, blank=True)
+    user_email = models.EmailField()
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    departments = models.ManyToManyField('Department', blank=True)
+    description = models.TextField()
+    severity = models.CharField(max_length=1, choices=SEVERITY_CHOICES, blank=True, default='0')
+    ai_summary = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     works = models.ManyToManyField(DepartmentWork, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        if not self.complaint_id:
+            today = timezone.now().strftime("%Y%m%d")
+
+            last = Complaint.objects.filter(
+                complaint_id__startswith=f"CMP-{today}"
+            ).order_by("-complaint_id").first()
+
+            if last:
+                last_number = int(last.complaint_id.split("-")[-1])
+                new_number = last_number + 1
+            else:
+                new_number = 1
+
+            self.complaint_id = f"CMP-{today}-{new_number:05d}"
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Complaint {self.id} - {self.organisation.name}"
+        return f"{self.complaint_id} - {self.organisation.name}"
+    
+    
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -91,5 +110,8 @@ class Manager(models.Model):
     def __str__(self):
         return self.name
 
+<<<<<<< HEAD
     def __str__(self):
         return f"{self.user.username} - {self.organisation.name}"
+=======
+>>>>>>> 87abd6fcad52e76ae047c27804f9dbdd77076ea7
