@@ -41,23 +41,13 @@ class Complaint(models.Model):
         ('4', '4 - High'),
         ('5', '5 - Critical'),
     ]
-    severity = models.CharField(
-        max_length=1,
-        choices=SEVERITY_CHOICES,
-        blank=True,   # optional
-        default='0'
-    )
+    
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('WORKING', 'Working On'),
         ('CLOSED', 'Closed'),
     ]
 
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='PENDING'
-    )
     complaint_id = models.CharField(max_length=50, unique=True, blank=True)
     user_email = models.EmailField()
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
@@ -107,11 +97,6 @@ class Manager(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     managerid = models.CharField(max_length=20, unique=True)
 
-    def __str__(self):
-        return self.name
 
-<<<<<<< HEAD
     def __str__(self):
         return f"{self.user.username} - {self.organisation.name}"
-=======
->>>>>>> 87abd6fcad52e76ae047c27804f9dbdd77076ea7

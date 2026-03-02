@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from .forms import OrganisationForm
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+#from rest_framework.decorators import api_view, permission_classes
+#from rest_framework.permissions import IsAuthenticated
+#from rest_framework.response import Response
 from core.models import Complaint, Manager
-
+from django.contrib.auth.decorators import login_required
 def create_organisation(request):
     if request.method == 'POST':
         form = OrganisationForm(request.POST)
@@ -18,14 +18,16 @@ def create_organisation(request):
 
 def organisation_success(request):
     return render(request, 'organisation/success.html')
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+@login_required
 def organisation_dashboard(request):
     try:
         manager = Manager.objects.get(user=request.user)
     except Manager.DoesNotExist:
-        return Response(
-            {"error": "Not an organisation admin"},
+        return render(
+            request,
+            "organisation/not_authorized.html",
             status=403
         )
 
@@ -40,4 +42,4 @@ def organisation_dashboard(request):
         "closed": complaints.filter(status="CLOSED").count(),
     }
 
-    return Response(data)
+    return render(request, "organisation/dashboard.html", data)

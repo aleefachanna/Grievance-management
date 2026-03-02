@@ -5,6 +5,7 @@ class OrganisationForm(forms.ModelForm):
     class Meta:
         model = Organisation
         fields = [
+            'org_id',
             'name',
             'organisation_type',
             'industry',
