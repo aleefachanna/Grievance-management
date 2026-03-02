@@ -1,102 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Added for the Home link
-import api from './api';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './style.css'; 
 
-function SubmitComp() {
-    const [organisations, setOrganisations] = useState([]);
-    const [formData, setFormData] = useState({
-        email: '',
-        organisation: '',
-        description: ''
-    });
-    const [message, setMessage] = useState('');
-    const [loading, setLoading] = useState(false); // Added loading state
+const SubmitGrievance = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    organisation: '',
+    description: ''
+  });
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        api.get('submit/')
-            .then(res => setOrganisations(res.data))
-            .catch(err => console.error("Could not fetch organisations", err));
-    }, []);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Grievance Submitted:", formData);
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true); // Start loading
-        setMessage('');   // Clear old messages
+  return (
+    <div className="resolve-wrapper">
+      <div className="resolve-card">
+        {/* Modern Arrow Back Button based on Noun Project reference */}
+        <button 
+          onClick={() => navigate('/')}
+          className="resolve-back-icon-btn"
+          title="Back to Home"
+        >
+          <svg 
+            width="24" 
+            height="24" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              d="M19 12H5M5 12L12 19M5 12L12 5" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
 
-        try {
-            const response = await api.post('submit/', formData);
-            // MATCHED KEY: complaint_id instead of id
-            setMessage(`Complaint submitted! ID: ${response.data.complaint_id}`);
-            setFormData({ email: '', organisation: '', description: '' }); 
-        } catch (err) {
-            setMessage("Error submitting complaint. Please try again.");
-        } finally {
-            setLoading(false); // Stop loading regardless of success/fail
-        }
-    };
-
-    return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-            <Link to="/" className="text-blue-500 text-sm hover:underline">← Back to Home</Link>
-            <h2 className="text-2xl font-bold mb-6 mt-2">Submit a Grievance</h2>
-
-            {message && (
-                <div className={`p-4 mb-4 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {message}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block font-semibold">Your Email</label>
-                    <input 
-                        type="email" 
-                        required 
-                        className="w-full border p-2 rounded"
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        disabled={loading}
-                    />
-                </div>
-
-                <div>
-                    <label className="block font-semibold">Select Organisation</label>
-                    <select 
-                        required 
-                        className="w-full border p-2 rounded"
-                        value={formData.organisation}
-                        onChange={(e) => setFormData({...formData, organisation: e.target.value})}
-                        disabled={loading}
-                    >
-                        <option value="">-- Choose --</option>
-                        {organisations.map(org => (
-                            <option key={org.id} value={org.id}>{org.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block font-semibold">Describe your issue</label>
-                    <textarea 
-                        rows="5" 
-                        required 
-                        className="w-full border p-2 rounded"
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
-                        disabled={loading}
-                    ></textarea>
-                </div>
-
-                <button 
-                    type="submit" 
-                    className={`w-full py-2 rounded font-bold transition text-white ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
-                    disabled={loading}
-                >
-                    {loading ? "Processing AI Analysis..." : "Submit Complaint"}
-                </button>
-            </form>
+        <div className="resolve-logo-area">
+          <span className="resolve-logo-text">ResolvePro</span>
         </div>
-    );
-}
+        
+        <h2 className="resolve-header">Submit a Grievance</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="resolve-input-group">
+            <label className="resolve-label">Your Email</label>
+            <input
+              type="email"
+              className="resolve-input"
+              placeholder="name@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
 
-export default SubmitComp;
+          <div className="resolve-input-group">
+            <label className="resolve-label">Select Organisation</label>
+            <select
+              className="resolve-input"
+              value={formData.organisation}
+              onChange={(e) => setFormData({ ...formData, organisation: e.target.value })}
+              required
+            >
+              <option value="">-- Choose Organisation --</option>
+              <option value="org1">Health Department</option>
+              <option value="org2">Education Board</option>
+              <option value="org3">Public Works</option>
+            </select>
+          </div>
+
+          <div className="resolve-input-group">
+            <label className="resolve-label">Describe your issue</label>
+            <textarea
+              className="resolve-input"
+              style={{ minHeight: '120px', resize: 'vertical' }}
+              placeholder="Provide details about your grievance..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+            />
+          </div>
+          
+          <button type="submit" className="resolve-btn">
+            Submit Complaint
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SubmitGrievance;
