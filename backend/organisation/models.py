@@ -9,12 +9,10 @@ class Organisation(models.Model):
     ]
 
     name = models.CharField(max_length=255)
-    org_id = models.CharField(max_length=50, unique=True)
+    cin = models.CharField(max_length=50, unique=True) # Changed from org_id
+    gstin = models.CharField(max_length=15, unique=True)
 
-    organisation_type = models.CharField(
-        max_length=20,
-        choices=ORGANISATION_TYPE_CHOICES
-    )
+    organisation_types = models.JSONField(default=list, blank=True)
     industry = models.CharField(max_length=100)
 
     official_email = models.EmailField()

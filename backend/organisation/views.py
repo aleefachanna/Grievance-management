@@ -7,7 +7,8 @@ from core.models import Complaint, Manager
 from django.contrib.auth.decorators import login_required
 def create_organisation(request):
     if request.method == 'POST':
-        form = OrganisationForm(request.POST)
+        # The form now knows organisation_types is a list
+        form = OrganisationForm(request.POST) 
         if form.is_valid():
             form.save()
             return redirect('success')
