@@ -16,6 +16,7 @@ from django.utils import timezone
 # Ensure your file is named service.py or utils.py and match it here
 from .service import classify_and_summarize, summarize_department_work, ai_assign_works  # Assuming your model is named Employee
 from organisation.models import Organisation
+from django.db.models import Count
 def dep_login(request):
     if request.method == 'POST':
         dep_id = request.POST.get('Dep_id')
@@ -264,3 +265,34 @@ def handle_assign_work(request, department):
 
     if department in complaint.departments.all():
         complaint.works.add(work)
+def organisation_stats_api(request, cin):
+    try:
+        # 1. Identify the organization using the CIN from your model
+        org = Organisation.objects.get(cin=cin)
+        
+        # 2. Get the count of complaints for this org
+        complaints = Complaint.objects.filter(organisation=org)
+        
+        # 3. Calculate breakdown for the Pie Chart
+        # This groups by status and counts them in one database query
+        status_counts = complaints.values('status').annotate(total=Count('status'))
+        
+        # 4. Initialize our response object
+        stats_data = {
+            "total": complaints.count(),
+            "pending": 0,
+            "in_progress": 0,
+            "resolved": 0,
+            "rejected": 0
+        }
+
+        # 5. Map DB results to our JSON keys
+        for item in status_counts:
+            status = item['status'].lower().replace(" ", "_")
+            if status in stats_data:
+                stats_data[status] = item['total']
+
+        return JsonResponse(stats_data)
+
+    except Organisation.DoesNotExist:
+        return JsonResponse({"error": "Organisation not found"}, status=404)
