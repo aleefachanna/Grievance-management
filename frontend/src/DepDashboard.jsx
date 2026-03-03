@@ -1,121 +1,205 @@
-import React, { useEffect, useState } from 'react';
-import api from './api';
+import React, { useEffect, useState } from "react";
+import api from "./api";
 
-function DepartmentDashboard() {
+function DepDashboard() {
+  const [dashboard, setDashboard] = useState(null);
+  const [complaints, setComplaints] = useState([]);
+  const [works, setWorks] = useState([]);
+  const [error, setError] = useState("");
 
-    const [data, setData] = useState(null);
-    const [newWork, setNewWork] = useState({ title: '', description: '' });
+  const [newWorkTitle, setNewWorkTitle] = useState("");
+  const [newWorkDescription, setNewWorkDescription] = useState("");
 
-    const fetchData = async () => {
-        const res = await api.get("department/dashboard/");
-        setData(res.data);
-    };
+  useEffect(() => {
+    loadAllData();
+  }, []);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+  const loadAllData = async () => {
+    try {
+      const [dashRes, compRes, workRes] = await Promise.all([
+        api.get("/department/dashboard/"),
+        api.get("/department/complaints/"),
+        api.get("/department/works/"),
+      ]);
 
-    const handleAction = async (payload) => {
-        await api.post("department/dashboard/", payload);
-        fetchData();
-    };
+      setDashboard(dashRes.data);
+      setComplaints(compRes.data);
+      setWorks(workRes.data);
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
-    if (!data) return <div>Loading...</div>;
+  const handleError = (err) => {
+    console.error(err);
+    if (err.response?.status === 401) {
+      window.location.href = "/employee-login";
+    } else {
+      setError("Something went wrong.");
+    }
+  };
 
-    return (
-        <div className="p-6">
+  // ==============================
+  // WORK ACTIONS
+  // ==============================
 
-            <h1 className="text-2xl font-bold mb-6">
-                Department: {data.department_name}
-            </h1>
+  const createWork = async () => {
+    try {
+      await api.post("/department/works/", {
+        title: newWorkTitle,
+        description: newWorkDescription,
+      });
 
-            {/* Complaints */}
-            <div className="mb-10">
-                <h2 className="font-bold mb-3">Complaints</h2>
+      setNewWorkTitle("");
+      setNewWorkDescription("");
+      loadAllData();
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
-                {data.complaints.map(c => (
-                    <div key={c.id} className="bg-white p-4 shadow mb-3 rounded">
-                        <p className="font-semibold">{c.description}</p>
-                        <p className="text-sm text-gray-600">
-                            AI Summary: {c.ai_summary}
-                        </p>
+  const assignEmployee = async (workId, employeeId) => {
+    if (!employeeId) return;
 
-                        <select
-                            value={c.status}
-                            onChange={(e) =>
-                                handleAction({
-                                    action: "update_complaint_status",
-                                    complaint_id: c.id,
-                                    status: e.target.value
-                                })
-                            }
-                            className="mt-2 border p-1 rounded"
-                        >
-                            <option value="PENDING">PENDING</option>
-                            <option value="WORKING">WORKING</option>
-                            <option value="CLOSED">CLOSED</option>
-                        </select>
-                    </div>
-                ))}
-            </div>
+    try {
+      await api.post(`/department/works/${workId}/assign/`, {
+        employee_id: employeeId,
+      });
 
-            {/* Works */}
-            <div>
-                <h2 className="font-bold mb-3">Works</h2>
+      loadAllData();
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
-                {data.works.map(w => (
-                    <div key={w.id} className="bg-white p-4 shadow mb-3 rounded">
-                        <p className="font-bold">{w.title}</p>
-                        <p>{w.description}</p>
-                        <p>Status: {w.status}</p>
+  const completeWork = async (workId) => {
+    try {
+      await api.post(`/department/works/${workId}/complete/`);
+      loadAllData();
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
-                        {w.status !== "DONE" && (
-                            <button
-                                onClick={() =>
-                                    handleAction({
-                                        action: "complete_work",
-                                        work_id: w.id
-                                    })
-                                }
-                                className="mt-2 bg-green-500 text-white px-3 py-1 rounded"
-                            >
-                                Mark Done
-                            </button>
-                        )}
-                    </div>
-                ))}
+  // ==============================
+  // COMPLAINT ACTIONS
+  // ==============================
 
-                {/* Create Work */}
-                <div className="mt-6">
-                    <input
-                        placeholder="Title"
-                        className="border p-2 w-full mb-2"
-                        onChange={(e) =>
-                            setNewWork({ ...newWork, title: e.target.value })
-                        }
-                    />
-                    <textarea
-                        placeholder="Description"
-                        className="border p-2 w-full mb-2"
-                        onChange={(e) =>
-                            setNewWork({ ...newWork, description: e.target.value })
-                        }
-                    />
-                    <button
-                        onClick={() =>
-                            handleAction({
-                                action: "create_work",
-                                ...newWork
-                            })
-                        }
-                        className="bg-blue-600 text-white w-full py-2 rounded"
-                    >
-                        Create Work
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+  const closeComplaint = async (complaintId) => {
+    try {
+      await api.patch(`/department/complaints/${complaintId}/`, {
+        status: "CLOSED",
+      });
+
+      loadAllData();
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  if (!dashboard) return <h3>Loading...</h3>;
+
+  return (
+    <div style={{ padding: "40px" }}>
+      <h2>{dashboard.department} Dashboard</h2>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {/* ============================= */}
+      {/* COMPLAINTS SECTION */}
+      {/* ============================= */}
+      <section>
+        <h3>Complaints</h3>
+        {complaints.map((c) => (
+          <div
+            key={c.id}
+            style={{
+              border: "1px solid gray",
+              margin: "10px 0",
+              padding: "10px",
+            }}
+          >
+            <p><strong>Status:</strong> {c.status}</p>
+            <p>{c.description}</p>
+
+            {dashboard.is_hod && c.status !== "CLOSED" && (
+              <button onClick={() => closeComplaint(c.id)}>
+                Close Complaint
+              </button>
+            )}
+          </div>
+        ))}
+      </section>
+
+      {/* ============================= */}
+      {/* WORKS SECTION */}
+      {/* ============================= */}
+      <section>
+        <h3>Department Works</h3>
+
+        {works.map((w) => (
+          <div
+            key={w.id}
+            style={{
+              border: "1px solid blue",
+              margin: "10px 0",
+              padding: "10px",
+            }}
+          >
+            <p><strong>{w.title}</strong></p>
+            <p>Status: {w.status}</p>
+
+            {w.status !== "DONE" && (
+              <button onClick={() => completeWork(w.id)}>
+                Mark Done
+              </button>
+            )}
+
+            {dashboard.is_hod && (
+              <div style={{ marginTop: "10px" }}>
+                <select
+                  onChange={(e) => assignEmployee(w.id, e.target.value)}
+                >
+                  <option value="">Assign Employee</option>
+                  {dashboard.employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+
+      {/* ============================= */}
+      {/* CREATE WORK (HOD ONLY) */}
+      {/* ============================= */}
+      {dashboard.is_hod && (
+        <section style={{ marginTop: "30px" }}>
+          <h3>Create New Work</h3>
+
+          <input
+            type="text"
+            placeholder="Title"
+            value={newWorkTitle}
+            onChange={(e) => setNewWorkTitle(e.target.value)}
+          />
+          <br />
+
+          <textarea
+            placeholder="Description"
+            value={newWorkDescription}
+            onChange={(e) => setNewWorkDescription(e.target.value)}
+          />
+          <br />
+
+          <button onClick={createWork}>Create Work</button>
+        </section>
+      )}
+    </div>
+  );
 }
 
-export default DepartmentDashboard;
+export default DepDashboard;

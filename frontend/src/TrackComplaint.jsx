@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-
+import api from './api'; // Assuming you have an api.js for axios instance
 function TrackComplaint() {
   const [complaintId, setComplaintId] = useState("");
   const [complaint, setComplaint] = useState(null);
@@ -8,9 +8,7 @@ function TrackComplaint() {
 
   const handleTrack = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/api/track/${complaintId}/`
-      );
+      const response = await api.get(`complaint/track/${complaintId}/`); // <-- add 'complaint/'
       setComplaint(response.data);
       setError("");
     } catch (err) {

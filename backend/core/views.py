@@ -1,122 +1,213 @@
-from urllib import request
-from rest_framework.views import APIView
+from django.conf import settings
+from django.core.mail import EmailMessage
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.db.models import Q, Case, When, Value, IntegerField
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
+import secrets
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
-from django.contrib.auth import authenticate
-from django.core.mail import EmailMessage
-from django.conf import settings
-# ... keep your other imports like APIView, Response, etc.
-from .models import Complaint, Department, DepartmentWork, Employee,Manager
-from organisation.models import Organisation
-from .serializers import ComplaintSerializer, DepartmentWorkSerializer, OrganisationSerializer
-from .service import classify_and_summarize, summarize_department_work, ai_assign_works
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .serializers import ComplaintTrackSerializer
-from django.contrib.auth.hashers import check_password
-from rest_framework.decorators import api_view
+from .models import Complaint, Department, DepartmentWork, Employee, Manager, Organisation
+from .serializers import (
+    ComplaintDetailSerializer,
+    ComplaintCreateSerializer,
+    DepartmentWorkSerializer,
+    OrganisationSerializer,
+    ComplaintTrackSerializer
+)
+from .service import classify_and_summarize
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response({"message": "Logged out successfully"})
+@api_view(['GET'])
+def track_complaint(request, complaint_id):
+    complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
+    serializer = ComplaintTrackSerializer(complaint)
+    return Response(serializer.data)
+
+
+
+def send_email(subject: str, body: str, to_email: str):
+    """Send email using Django EmailMessage."""
+    mail = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[to_email]
+    )
+    mail.send(fail_silently=False)
+
+@api_view(['GET'])
+def get_organisation(request, slug: str):
+    org = get_object_or_404(Organisation, slug=slug, is_active=True)
+    serializer = OrganisationSerializer(org)
+    return Response(serializer.data)
+
+
+
+@api_view(['GET'])
+def search_organisations(request):
+    query = request.GET.get('q', '')
+    
+    # If query exists, filter; otherwise, get all
+    if query:
+        orgs = Organisation.objects.filter(
+            Q(name__icontains=query) | Q(city__icontains=query),
+            is_active=True
+        )
+    else:
+        orgs = Organisation.objects.filter(is_active=True)
+
+    results = [
+        {
+            'name': org.name,
+            'slug': org.slug,
+            'type': org.get_organisation_type_display(),
+            'location': f"{org.city}, {org.country}"
+        } 
+        for org in orgs
+    ]
+
+    return Response({'results': results}) # Use Response instead of JsonResponse
+# =========================================================
+# MANAGER LOGIN (JWT ENABLED)
+# =========================================================
+def create_employee(data):
+
+    temp_password = secrets.token_urlsafe(8)
+
+    user = User.objects.create(
+        username=data["employee_id"],
+        email=data["email"],
+        password=make_password(temp_password),
+        first_name=data["name"]
+    )
+
+    Employee.objects.create(
+        user=user,
+        organisation=data["organisation"],
+        department=data.get("department"),
+        employee_id=data["employee_id"],
+        password=make_password(temp_password)
+    )
+
+    return temp_password
 
 @api_view(['POST'])
 def manager_login(request):
     manager_id = request.data.get("manager_id")
+    password = request.data.get("password", "")
 
     try:
-        manager = Manager.objects.get( manager_id=manager_id)
+        manager = Manager.objects.get(id=manager_id)
+
+        if not manager.check_password(password):
+            raise Manager.DoesNotExist
+
+        refresh = RefreshToken.for_user(manager.user)
+
         return Response({
-            "message": "Login successful",  
-            "manager_id": manager.manager_id,
-            "org_id": manager.organisation.id   
+            "message": "Login successful",
+            "manager_id": str(manager.id),
+            "organisation_id": str(manager.organisation.id),
+            "refresh": str(refresh),
+            "access": str(refresh.access_token)
         })
+
     except Manager.DoesNotExist:
-        return Response({"error": "Invalid credentials"}, status=400)
-
-@api_view(['GET'])
-def track_complaint(request, complaint_id):
-    try:
-        complaint = Complaint.objects.get(complaint_id=complaint_id)
-        serializer = ComplaintTrackSerializer(complaint)
-        return Response(serializer.data)
-    except Complaint.DoesNotExist:
         return Response(
-            {"error": "Complaint not found"},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Invalid credentials"},
+            status=status.HTTP_401_UNAUTHORIZED
         )
-# 1. CUSTOM LOGIN (Returns JWT)
-class LoginView(APIView):
-    def post(self, request):
-        dep_id = request.data.get('Dep_id')
-        emp_id = request.data.get('Emp_id')
-        
-        try:
-            employee = Employee.objects.get(department__dept_id=dep_id, employeeid=emp_id)
-            user = employee.user
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'employee_name': employee.name
-            })
-        except Employee.DoesNotExist:
-            return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# 2. SUBMIT COMPLAINT (Public API)
 class SubmitComplaintView(APIView):
-    # This replaces the "organisations = Organisation.objects.all()" part
+    """
+    Public complaint submission endpoint.
+    Saves complaint first, then processes AI.
+    """
+
     def get(self, request):
-        organisations = Organisation.objects.all()
-        serializer = OrganisationSerializer(organisations, many=True)
+        orgs = Organisation.objects.filter(is_active=True)
+        serializer = OrganisationSerializer(orgs, many=True)
         return Response(serializer.data)
 
+    @transaction.atomic
     def post(self, request):
-        # React sends data as JSON, accessible via request.data
-        org_id = request.data.get('organisation')
-        description = request.data.get('description')
-        email = request.data.get('email')
 
-        try:
-            organisation = Organisation.objects.get(id=org_id)
-        except Organisation.DoesNotExist:
-            return Response({"error": "Organisation not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ComplaintCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        dept_queryset = Department.objects.filter(organisation=organisation)
-        dept_names = list(dept_queryset.values_list('name', flat=True))
+        organisation = serializer.validated_data["organisation"]
+        description = serializer.validated_data["description"]
+        email = request.data.get("email")
 
-        # ✅ Create complaint
         complaint = Complaint.objects.create(
-            user_email=email,
             organisation=organisation,
             description=description,
+            user_email=email
         )
 
+        dept_queryset = Department.objects.filter(organisation=organisation)
+        dept_names = list(dept_queryset.values_list("name", flat=True))
+
         ai_status = "success"
+
         try:
-            # ✅ AI Processing
             ai_result = classify_and_summarize(description, dept_names)
-            departments = ai_result.get("departments", [])
+
             summary = ai_result.get("summary", "")
             severity = str(ai_result.get("severity", "0"))
+            departments = ai_result.get("departments", [])
 
             if severity not in ["0", "1", "2", "3", "4", "5"]:
                 severity = "0"
 
             complaint.ai_summary = summary
             complaint.severity = severity
-            complaint.save()
 
             if departments:
-                dept_objects = Department.objects.filter(name__in=departments)
-                complaint.departments.set(dept_objects)
+                dept_obj = Department.objects.filter(
+                    organisation=organisation,
+                    name__in=departments
+                ).first()
+                if dept_obj:
+                    complaint.department = dept_obj
+
+            complaint.save()
 
         except Exception as e:
             ai_status = f"failed: {str(e)}"
-            complaint.ai_summary = ""
             complaint.severity = "0"
             complaint.save()
 
-        # ✅ Email Logic
-        self.send_confirmation_email(complaint, organisation, email)
+        email_body = f"""
+Hello,
+
+Your complaint has been registered successfully.
+
+Complaint ID: {complaint.complaint_id}
+Organisation: {organisation.name}
+Severity Level: {complaint.severity}
+
+We will review your complaint shortly.
+"""
+
+        if email:
+            send_email("Complaint Registered Successfully", email_body, email)
 
         return Response({
             "message": "Complaint submitted successfully",
@@ -124,99 +215,13 @@ class SubmitComplaintView(APIView):
             "complaint_id": complaint.complaint_id
         }, status=status.HTTP_201_CREATED)
 
-    def send_confirmation_email(self, complaint, organisation, email):
-        email_body = f"""
-Hello,
-Your complaint has been registered successfully.
-Complaint ID: {complaint.complaint_id}
-Organisation: {organisation.name}
-Severity Level: {complaint.severity}
-We will review your complaint shortly.
-"""
-        mail = EmailMessage(
-            subject="Complaint Registered Successfully",
-            body=email_body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email],
-        )
-        mail.send(fail_silently=False)
 
-# 3. DASHBOARD (Protected API)
-class DepartmentDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        employee = Employee.objects.get(user=request.user)
-        department = employee.department
-
-        complaints = Complaint.objects.filter(
-            departments=department
-        ).order_by("-created_at")
-
-        works = DepartmentWork.objects.filter(
-            department=department
-        ).order_by("-created_at")
-
-        return Response({
-            "department_name": department.name,
-            "complaints": ComplaintSerializer(complaints, many=True).data,
-            "works": DepartmentWorkSerializer(works, many=True).data,
-            "employees": [
-                {
-                    "id": e.id,
-                    "name": e.name
-                }
-                for e in Employee.objects.filter(department=department)
-            ]
-        })
-
-    def post(self, request):
-        employee = Employee.objects.get(user=request.user)
-        department = employee.department
-        action = request.data.get("action")
-
-        # 1️⃣ Update Complaint Status
-        if action == "update_complaint_status":
-            complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
-            complaint.status = request.data.get("status")
-            if complaint.status == "CLOSED":
-                complaint.closed_at = timezone.now()
-            complaint.save()
-            return Response({"message": "Complaint updated"})
-
-        # 2️⃣ Complete Work
-        if action == "complete_work":
-            work = DepartmentWork.objects.get(
-                id=request.data.get("work_id"),
-                department=department
-            )
-            work.status = "DONE"
-            work.completed_at = timezone.now()
-            work.save()
-            return Response({"message": "Work completed"})
-
-        # 3️⃣ Assign Employee to Work
-        if action == "assign_employee":
-            work = DepartmentWork.objects.get(id=request.data.get("work_id"))
-            emp = Employee.objects.get(id=request.data.get("employee_id"))
-            work.employees.add(emp)
-            return Response({"message": "Employee assigned"})
-
-        # 4️⃣ Create Work
-        if action == "create_work":
-            DepartmentWork.objects.create(
-                department=department,
-                title=request.data.get("title"),
-                description=request.data.get("description", "")
-            )
-            return Response({"message": "Work created"})
-
-        return Response({"error": "Invalid action"}, status=400)
 class ManagerDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        manager = Manager.objects.get(user=request.user)
+
+        manager = get_object_or_404(Manager, user=request.user)
         org = manager.organisation
 
         departments = Department.objects.filter(organisation=org)
@@ -227,26 +232,44 @@ class ManagerDashboardView(APIView):
 
         return Response({
             "organisation": org.name,
-            "departments": [
-                {"id": d.id, "name": d.name}
-                for d in departments
-            ],
-            "complaints": ComplaintSerializer(complaints, many=True).data,
-            "works": DepartmentWorkSerializer(works, many=True).data,
+            "stats": {
+                "total_complaints": complaints.count(),
+                "pending_complaints": complaints.exclude(status="CLOSED").count(),
+                "total_departments": departments.count()
+            },
+            "departments": [{"id": d.id, "name": d.name} for d in departments],
+            "complaints": ComplaintDetailSerializer(complaints, many=True).data,
+            "works": DepartmentWorkSerializer(works, many=True).data
         })
 
     def post(self, request):
-        manager = Manager.objects.get(user=request.user)
+
+        manager = get_object_or_404(Manager, user=request.user)
+        org = manager.organisation
         action = request.data.get("action")
 
-        # Reassign Complaint
         if action == "reassign_complaint":
-            complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
-            department = Department.objects.get(id=request.data.get("department_id"))
+            complaint = get_object_or_404(
+                Complaint,
+                id=request.data.get("complaint_id"),
+                organisation=org
+            )
 
-            complaint.departments.set([department])
+            department = get_object_or_404(
+                Department,
+                id=request.data.get("department_id"),
+                organisation=org
+            )
+
+            complaint.department = department
             complaint.save()
 
             return Response({"message": "Complaint reassigned"})
 
         return Response({"error": "Invalid action"}, status=400)
+
+
+# =========================================================
+# EMPLOYEE CREATION UTILITY
+# =========================================================
+

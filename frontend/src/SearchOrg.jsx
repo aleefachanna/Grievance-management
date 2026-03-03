@@ -1,77 +1,98 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from './api'; // Assuming this is your axios instance
 
-function SearchOrg() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+const OrganisationList = () => {
+  const [organisations, setOrganisations] = useState([]);
+  const [filteredOrgs, setFilteredOrgs] = useState([]);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // 1. Fetch ALL organisations on component mount
   useEffect(() => {
-    if (!query) {
-      setResults([]);
-      return;
-    }
+    const fetchAllOrgs = async () => {
+      try {
+        const response = await api.get('/organisations/search/?q='); 
+        // Note: You might need a separate 'list' endpoint if search requires 'q'
+        setOrganisations(response.data.results);
+        setFilteredOrgs(response.data.results);
+      } catch (error) {
+        console.error("Error fetching organisations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllOrgs();
+  }, []);
 
-    const delayDebounce = setTimeout(() => {
-      axios
-        .get(`http://127.0.0.1:8000/org/search-organisations/?q=${query}`)
-        .then((res) => {
-          setResults(res.data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }, 300);
+  // 2. Filter list locally as user types
+  useEffect(() => {
+    const results = organisations.filter(org =>
+      org.name.toLowerCase().includes(query.toLowerCase()) ||
+      org.location.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredOrgs(results);
+  }, [query, organisations]);
 
-    return () => clearTimeout(delayDebounce);
-  }, [query]);
-
-  const handleClick = (slug) => {
-    navigate(`/org/${slug}`);
-    setQuery("");
-    setResults([]);
+  const handleSelect = (slug) => {
+    if (slug) navigate(`/organisation/${slug}`);
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
+      <h1>Organisations</h1>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search by name or city..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #ddd',
+            fontSize: '16px'
+          }}
+        />
+      </div>
 
-      <input
-        type="text"
-        placeholder="Search Organisation..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full border p-2 rounded"
-      />
-
-      {results.length > 0 && (
-        <div className="absolute bg-white shadow-lg w-full mt-1 rounded max-h-60 overflow-y-auto z-50">
-          {results.map((org) => (
-            <div
-              key={org.id}
-              onClick={() => handleClick(org.slug)}
-              className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer"
-            >
-              {org.logo && (
-                <img
-                  src={`http://127.0.0.1:8000${org.logo}`}
-                  width="30"
-                  alt="logo"
-                />
-              )}
-
-              <div>
-                <div className="font-medium">{org.name}</div>
-                <div className="text-xs text-gray-500">
-                  {org.city}, {org.state}
+      {loading ? (
+        <p>Loading organisations...</p>
+      ) : (
+        <div style={{ display: 'grid', gap: '15px' }}>
+          {filteredOrgs.length > 0 ? (
+            filteredOrgs.map((org) => (
+              <div 
+                key={org.slug}
+                onClick={() => handleSelect(org.slug)}
+                style={{
+                  padding: '15px',
+                  border: '1px solid #eee',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  backgroundColor: '#fff',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+              >
+                <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{org.name}</div>
+                <div style={{ color: '#666', fontSize: '14px' }}>
+                  {org.type} • {org.location}
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p style={{ textAlign: 'center', color: '#999' }}>No matches found.</p>
+          )}
         </div>
       )}
     </div>
   );
-}
+};
 
-export default SearchOrg;
+export default OrganisationList;

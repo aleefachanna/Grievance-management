@@ -9,15 +9,18 @@ import ManagerLogin from "./ManagerLogin";//
 import CreateOrg from "./CreateOrg";//
 import DepDashBoard from "./DepDashboard";//
 import ManagerDash from "./ManagerDash";
+import { AuthProvider } from "./AuthContext";
 function App() {
   return (
     <BrowserRouter>
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/submit" element={<Submit />} />
         <Route path="/track" element={<Track />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/org/:slug" element={<Organisation />} />
+        <Route path="/organisation/:slug" element={<Organisation />} />
+
         <Route path="/employee-login" element={<DepLogin />} />
         <Route path="/manager-login" element={<ManagerLogin />} />
         <Route path="/create-org" element={<CreateOrg />} />
@@ -25,6 +28,7 @@ function App() {
         <Route path="/managerdashboard" element={<ManagerDash />} />
 
       </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

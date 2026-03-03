@@ -1,54 +1,99 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import this!
-import api from './api';
+import React, { useState } from "react";
+import api from "./api";
 
-function DepLogin() {
-    const [credentials, setCredentials] = useState({ Dep_id: '', Emp_id: '' });
-    const navigate = useNavigate(); // Initialize the navigator
+function DepartmentLogin() {
+  const [email, setEmail] = useState("");
+  const [organisationId, setOrganisationId] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [firstLogin, setFirstLogin] = useState(false);
+  const [message, setMessage] = useState("");
 
-    const handleLogin = async () => {
-        try {
-            // Ensure the keys match exactly what your Django View expects (Dep_id, Emp_id)
-            const res = await api.post('emplogin/', credentials);
-            
-            localStorage.setItem('access_token', res.data.access);
-            localStorage.setItem('refresh_token', res.data.refresh);
-            
-            // Redirect using React Router instead of refreshing the whole browser
-            navigate('/depdashboard'); 
-        } catch (err) {
-            console.error(err);
-            alert("Invalid Department ID or Employee ID.");
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post(
+        "/department/login/",
+        {
+          email,
+          organisation_id: organisationId,
+          password,
+          new_password: firstLogin ? newPassword : undefined,
         }
-    };
+      );
 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <div className="p-8 bg-white shadow-md rounded-lg w-96">
-                <h2 className="text-2xl font-bold mb-6 text-center">Department Login</h2>
-                
-                <div className="space-y-4">
-                    <input 
-                        className="w-full p-2 border rounded"
-                        placeholder="Department ID" 
-                        onChange={e => setCredentials({...credentials, Dep_id: e.target.value})} 
-                    />
-                    <input 
-                        className="w-full p-2 border rounded"
-                        type="password"
-                        placeholder="Employee ID" 
-                        onChange={e => setCredentials({...credentials, Emp_id: e.target.value})} 
-                    />
-                    <button 
-                        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold"
-                        onClick={handleLogin}
-                    >
-                        Login
-                    </button>
-                </div>
-            </div>
+      if (response.data.first_login) {
+        setFirstLogin(true);
+        setMessage("First login. Please set a new password.");
+      } else {
+
+        // ✅ STORE JWT TOKENS
+        localStorage.setItem("access", response.data.access);
+        localStorage.setItem("refresh", response.data.refresh);
+
+        window.location.href = "/depdashboard";
+      }
+    } catch (error) {
+      setMessage(
+        error.response?.data?.error || "Login failed. Try again."
+      );
+    }
+  };
+
+  return (
+    <div style={{ padding: "40px" }}>
+      <h2>Department Employee Login</h2>
+
+      <form onSubmit={handleLogin}>
+        <div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-    );
+
+        <div>
+          <input
+            type="text"
+            placeholder="Organisation ID"
+            value={organisationId}
+            onChange={(e) => setOrganisationId(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {firstLogin && (
+          <div>
+            <input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+        )}
+
+        <button type="submit">Login</button>
+      </form>
+
+      {message && <p style={{ color: "red" }}>{message}</p>}
+    </div>
+  );
 }
 
-export default DepLogin;
+export default DepartmentLogin;

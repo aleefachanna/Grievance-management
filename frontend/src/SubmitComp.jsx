@@ -13,7 +13,7 @@ function SubmitComp() {
     const [loading, setLoading] = useState(false); // Added loading state
 
     useEffect(() => {
-        api.get('submit/')
+        api.get('complaint/submit/')   // <-- add 'complaint/'
             .then(res => setOrganisations(res.data))
             .catch(err => console.error("Could not fetch organisations", err));
     }, []);
@@ -24,7 +24,7 @@ function SubmitComp() {
         setMessage('');   // Clear old messages
 
         try {
-            const response = await api.post('submit/', formData);
+            const response = await api.post('complaint/submit/', formData);
             // MATCHED KEY: complaint_id instead of id
             setMessage(`Complaint submitted! ID: ${response.data.complaint_id}`);
             setFormData({ email: '', organisation: '', description: '' }); 

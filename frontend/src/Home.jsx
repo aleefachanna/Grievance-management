@@ -7,7 +7,6 @@ function Home() {
     { title: "Submit Complaint", path: "/submit" },
     { title: "Track Complaint", path: "/track" },
     { title: "Search Organisations", path: "/search" },
-    { title: "View Organisation", path: "/organisation" },
     { title: "Employee Login", path: "/employee-login" },
     { title: "Manager Login", path: "/manager-login" },
     { title: "Create Organisation", path: "/create-org" },

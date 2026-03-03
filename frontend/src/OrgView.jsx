@@ -1,14 +1,14 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import api from './api'; // Assuming you have an api.js for axios instance
 function OrgView() {
   const { slug } = useParams();
   const [org, setOrg] = useState(null);
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/org/organisation/${slug}/`)
+    api
+      .get(`organisation/${slug}/`)
       .then((res) => setOrg(res.data))
       .catch((err) => console.error(err));
   }, [slug]);
