@@ -1,0 +1,13 @@
+/* Ensure the browser window is fully used */
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh; /* Takes at least the full height of the screen */
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    background-color: #210E2A; /* Match your home page primary dark color */
+}
