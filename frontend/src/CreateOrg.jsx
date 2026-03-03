@@ -1,166 +1,157 @@
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import './CreateOrg.css';
 
-function CreateOrg() {
+const CreateOrg = () => {
   const [formData, setFormData] = useState({
-    name: "",
-    organisation_type: "",
-    description: "",
-    official_email: "",
-    contact_phone: "",
-    website: "",
-    city: "",
-    state: "",
-    country: "",
+    orgName: '',
+    cin: '',
+    gstin: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    adminName: '',
+    adminEmail: '',
+    categories: [], // Array to store multiple selections
+    email: '',
+    phone: '',
+    website: ''
   });
 
-  const [logo, setLogo] = useState(null);
-
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  // Specialized handler for multiple checkboxes
+  const handleCategoryChange = (e) => {
+    const { value, checked } = e.target;
+    const { categories } = formData;
+
+    if (checked) {
+      setFormData({ ...formData, categories: [...categories, value] });
+    } else {
+      setFormData({ ...formData, categories: categories.filter((cat) => cat !== value) });
+    }
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    const data = new FormData();
-
-    for (let key in formData) {
-      data.append(key, formData[key]);
-    }
-
-    if (logo) {
-      data.append("logo", logo);
-    }
-
-    try {
-      await axios.post(
-        "http://127.0.0.1:8000/org/create/",
-        data,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      alert("Organisation Created Successfully!");
-    } catch (error) {
-      console.error(error.response?.data);
-      alert("Error creating organisation");
-    }
+    console.log("Submitting Organisation:", formData);
   };
+
+  const categoryOptions = [
+    { label: 'For-Profit', value: 'for_profit' },
+    { label: 'Non-Profit', value: 'non_profit' },
+    { label: 'Government', value: 'govt' },
+    { label: 'Sole Proprietorship', value: 'sole_proprietorship' },
+    { label: 'Partnership', value: 'partnership' },
+    { label: 'Company', value: 'company' },
+    { label: 'Cooperative Society', value: 'cooperative' }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10">
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Create New Organisation
-        </h2>
+    <div className="wrapper">
+      <div className="card">
+        <div className="brand-header">
+          <h1 className="brand-title">ResolvePro</h1>
+        </div>
+        
+        <h2 className="form-title">Create New Organisation</h2>
+        <p className="subtitle">Please provide the official details for registration.</p>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Organisation Name"
-            className="border p-2 rounded-lg col-span-2"
-            onChange={handleChange}
-            required
-          />
-
-          <select
-            name="organisation_type"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select Type</option>
-            <option value="private">Private</option>
-            <option value="government">Government</option>
-            <option value="ngo">NGO</option>
-            <option value="educational">Educational</option>
-          </select>
-
-          <input
-            type="email"
-            name="official_email"
-            placeholder="Official Email"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="contact_phone"
-            placeholder="Contact Phone"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-          />
-
-          <input
-            type="url"
-            name="website"
-            placeholder="Website"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-          />
-
-          <input
-            type="text"
-            name="city"
-            placeholder="City"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="state"
-            placeholder="State"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="country"
-            placeholder="Country"
-            className="border p-2 rounded-lg"
-            onChange={handleChange}
-            required
-          />
-
-          <textarea
-            name="description"
-            placeholder="Organisation Description"
-            className="border p-2 rounded-lg col-span-2"
-            rows="3"
-            onChange={handleChange}
-          />
-
-          <div className="col-span-2">
-            <label className="block text-sm mb-1">Upload Logo</label>
-            <input
-              type="file"
-              onChange={(e) => setLogo(e.target.files[0])}
-            />
+        <form onSubmit={handleSubmit}>
+          {/* Section: Organisation Basic Info */}
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 2 }}>
+              <label className="form-label">Organisation Name *</label>
+              <input className="form-input" type="text" name="orgName" placeholder="Legal Name" onChange={handleChange} required />
+            </div>
           </div>
 
-          <button
-            type="submit"
-            className="col-span-2 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition"
-          >
-            Create Organisation
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">CIN (Corporate ID) *</label>
+              <input className="form-input" type="text" name="cin" placeholder="U12345..." onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">GSTIN *</label>
+              <input className="form-input" type="text" name="gstin" placeholder="15-digit ID" onChange={handleChange} required />
+            </div>
+          </div>
+
+          <div className="form-group form-group-full">
+            <label className="form-label">Office Address *</label>
+            <textarea className="form-textarea" name="address" placeholder="Street address..." onChange={handleChange} required />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">City *</label>
+              <input className="form-input" type="text" name="city" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">State *</label>
+              <input className="form-input" type="text" name="state" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Country *</label>
+              <input className="form-input" type="text" name="country" onChange={handleChange} required />
+            </div>
+          </div>
+
+          {/* Section: Categories (Multi-select) */}
+          <div className="section-divider">Organisation Categories</div>
+          <div className="checkbox-grid">
+            {categoryOptions.map((opt) => (
+              <label key={opt.value} className="checkbox-item">
+                <input 
+                  type="checkbox" 
+                  value={opt.value} 
+                  checked={formData.categories.includes(opt.value)}
+                  onChange={handleCategoryChange}
+                />
+                <span>{opt.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Section: Admin Details */}
+          <div className="section-divider">Admin Details</div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Admin Full Name *</label>
+              <input className="form-input" type="text" name="adminName" placeholder="John Doe" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Admin Email *</label>
+              <input className="form-input" type="email" name="adminEmail" placeholder="admin@org.com" onChange={handleChange} required />
+            </div>
+          </div>
+
+          {/* Section: Contact Info */}
+          <div className="section-divider">Contact Information</div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Official Email *</label>
+              <input className="form-input" type="email" name="email" placeholder="contact@org.com" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Contact Phone *</label>
+              <input className="form-input" type="tel" name="phone" placeholder="+91..." onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Website</label>
+              <input className="form-input" type="url" name="website" placeholder="https://..." onChange={handleChange} />
+            </div>
+          </div>
+
+          <button type="submit" className="submit-button">
+            Register Organisation
           </button>
         </form>
       </div>
     </div>
   );
-}
+};
 
 export default CreateOrg;

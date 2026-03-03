@@ -1,49 +1,51 @@
-import { useState } from "react";
-import axios from "axios";
-import api from './api'; // Assuming you have an api.js for axios instance
-function TrackComplaint() {
-  const [complaintId, setComplaintId] = useState("");
-  const [complaint, setComplaint] = useState(null);
-  const [error, setError] = useState("");
+import React, { useState } from 'react';
+import './style.css'; // Importing the shared CSS file
 
-  const handleTrack = async () => {
-    try {
-      const response = await api.get(`complaint/track/${complaintId}/`); // <-- add 'complaint/'
-      setComplaint(response.data);
-      setError("");
-    } catch (err) {
-      setComplaint(null);
-      setError("Complaint not found");
-    }
+const TrackComplaint = () => {
+  const [complaintId, setComplaintId] = useState("");
+
+  const handleTrack = (e) => {
+    e.preventDefault();
+    console.log("Tracking ID:", complaintId);
+    // Add your backend fetch logic here
   };
 
   return (
-    <div>
-      <h2>Track Complaint</h2>
-
-      <input
-        type="text"
-        placeholder="Enter Complaint ID"
-        value={complaintId}
-        onChange={(e) => setComplaintId(e.target.value)}
-      />
-
-      <button onClick={handleTrack}>Track</button>
-
-      {error && <p>{error}</p>}
-
-      {complaint && (
-        <div>
-          <h3>Status: {complaint.status}</h3>
-          <p>Organisation: {complaint.organisation}</p>
-          <p>Severity: {complaint.severity}</p>
-          <p>Description: {complaint.description}</p>
-          <p>Created: {complaint.created_at}</p>
-          <p>Closed: {complaint.closed_at || "Not Closed Yet"}</p>
+    <div className="resolve-wrapper">
+      <div className="resolve-card">
+        <div className="resolve-logo-area">
+          <span className="resolve-logo-text">ResolvePro</span>
         </div>
-      )}
+        
+        <h2 className="resolve-header">Track Your Complaint</h2>
+        
+        <form onSubmit={handleTrack}>
+          <div className="resolve-input-group">
+            <label className="resolve-label">Complaint ID</label>
+            <input
+              type="text"
+              className="resolve-input"
+              placeholder="e.g. RPC-99210"
+              value={complaintId}
+              onChange={(e) => setComplaintId(e.target.value)}
+              required
+              style={{ textAlign: 'center' }} 
+            />
+          </div>
+          
+ <button type="submit" className="resolve-btn">
+            Track Complaint
+          </button>
+        </form>
+        
+        <div style={{ marginTop: '20px' }}>
+            <p style={{ color: '#666', fontSize: '14px' }}>
+              Lost your ID? <span style={{ color: '#B76B5C', cursor: 'pointer', fontWeight: 'bold' }}>Check your email</span>
+            </p>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default TrackComplaint;

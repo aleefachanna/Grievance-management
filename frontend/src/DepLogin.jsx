@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import api from "./api";
-
-function DepartmentLogin() {
+import {api} from "./api";
+import "./style.css"; // Importing the shared CSS file
+function DepLogin() {
   const [email, setEmail] = useState("");
-  const [organisationId, setOrganisationId] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [firstLogin, setFirstLogin] = useState(false);
@@ -17,7 +16,6 @@ function DepartmentLogin() {
         "/department/login/",
         {
           email,
-          organisation_id: organisationId,
           password,
           new_password: firstLogin ? newPassword : undefined,
         }
@@ -58,16 +56,6 @@ function DepartmentLogin() {
 
         <div>
           <input
-            type="text"
-            placeholder="Organisation ID"
-            value={organisationId}
-            onChange={(e) => setOrganisationId(e.target.value)}
-            required
-          />
-        </div>
-
-        <div>
-          <input
             type="password"
             placeholder="Password"
             value={password}
@@ -96,4 +84,4 @@ function DepartmentLogin() {
   );
 }
 
-export default DepartmentLogin;
+export default DepLogin;

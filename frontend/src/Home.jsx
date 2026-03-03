@@ -1,42 +1,96 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import "./Home.css";
 
 function Home() {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const cards = [
-    { title: "Submit Complaint", path: "/submit" },
-    { title: "Track Complaint", path: "/track" },
-    { title: "Search Organisations", path: "/search" },
-    { title: "Employee Login", path: "/employee-login" },
-    { title: "Manager Login", path: "/manager-login" },
-    { title: "Create Organisation", path: "/create-org" },
-  ];
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuOpen && !e.target.closest('.nav-links') && !e.target.closest('.mobile-menu-btn')) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : 'unset';
+  }, [menuOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10">
-      <div className="max-w-5xl mx-auto text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-3">
-          Complaint Management System
-        </h1>
-        <p className="text-gray-600 mb-10">
-          Smart grievance tracking & organisation management
-        </p>
+    <div className="home-container">
+      {/* Floating bubbles */}
+      <div className="floating-element floating-1"></div>
+      <div className="floating-element floating-2"></div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              onClick={() => navigate(card.path)}
-              className="bg-white rounded-2xl shadow-md p-6 cursor-pointer
-                         hover:shadow-xl hover:scale-105 transition duration-300"
-            >
-              <h2 className="text-lg font-semibold text-gray-700">
-                {card.title}
-              </h2>
+      {/* Navigation */}
+      <nav className="navbar">
+        <div className="logo">Resolve<span>Pro</span></div>
+        <button
+          className={`mobile-menu-btn ${menuOpen ? 'active' : ''}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
+          <a href="/track">Track Complaint</a>
+          <a href="/organisation">Organization</a>
+
+          {/* Dropdown for Login */}
+          <div className="dropdown">
+            <a href="/login" className="login">Login</a>
+            <div className="dropdown-content">
+              <a href="/create-org">Create Organization</a>
+              <a href="/manager-login">Manager Login</a>
+              <a href="/employee-login">Employee Login</a>
             </div>
-          ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero section */}
+      <div className="hero-wrapper">
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1 className="tagline">From Concern to Resolution</h1>
+            <div className="company-name">ResolvePro</div>
+            <p className="hero-description">
+              Smart grievance tracking & organisation management system.<br />
+              Streamlined, efficient, and effective solutions for all your concerns.
+            </p>
+            <button onClick={() => navigate('/submit')} className="cta-button">
+              Submit Complaint Now
+            </button>
+            <div className="stats-container">
+              <div className="stat-item">
+                <div className="stat-number">98%</div>
+                <div className="stat-label">Resolution Rate</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">24h</div>
+                <div className="stat-label">Avg Response</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">10K+</div>
+                <div className="stat-label">Resolved</div>
+              </div>
+            </div>
+            <a href="/submit" className="mobile-cta">Submit Complaint →</a>
+          </div>
+          <div className="hero-bg"></div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="footer">
+        <p>Transforming complaints into solutions since 2023</p>
+      </footer>
     </div>
   );
 }

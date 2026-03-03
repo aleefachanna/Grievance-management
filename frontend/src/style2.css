@@ -1,0 +1,25 @@
+.admin-container { display: flex; min-height: 100vh; background: #f8f9fa; }
+.sidebar { width: 260px; background: #1a1c23; color: white; padding: 20px; }
+.sidebar h2 { color: #4c51bf; font-size: 1.2rem; margin-bottom: 30px; }
+.sidebar nav button { width: 100%; padding: 12px; margin: 5px 0; background: none; border: none; color: #a0aec0; text-align: left; cursor: pointer; border-radius: 6px; }
+.sidebar nav button.active { background: #2d3748; color: white; }
+
+.main-viewport { flex: 1; padding: 20px; }
+.top-nav { display: flex; justify-content: space-between; background: white; padding: 15px 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+.action-bar { margin-bottom: 20px; display: flex; gap: 15px; }
+.ai-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.report-btn { background: #fff; border: 2px solid #764ba2; color: #764ba2; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+.content-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.data-table th { text-align: left; padding: 12px; border-bottom: 2px solid #edf2f7; color: #718096; }
+.data-table td { padding: 15px 12px; border-bottom: 1px solid #edf2f7; }
+
+.pill { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.DONE { background: #c6f6d5; color: #22543d; }
+
+.report-text { background: #f7fafc; padding: 20px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; border-left: 5px solid #764ba2; }
+body {
+  color: black; /* or use the hex code #000000 or the shorthand #000 */
+}

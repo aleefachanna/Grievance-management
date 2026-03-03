@@ -155,59 +155,47 @@ class DepartmentDashboardView(APIView):
             ]
         })
 class LoginView(APIView):
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get("email")
-        organisation_id = request.data.get("organisation_id")
-        password = request.data.get("password")
-        new_password = request.data.get("new_password")
 
-        if not email or not organisation_id or not password:
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        if not email or not password:
             return Response(
-                {"error": "Email, organisation and password are required."},
+                {"error": "Email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
             employee = Employee.objects.select_related(
                 "user", "organisation"
-            ).get(
-                user__email=email,
-                organisation__id=organisation_id
-            )
+            ).get(user__email__iexact=email)
 
             if not employee.user.check_password(password):
-                raise Employee.DoesNotExist
+                print("PASSWORD WRONG")
+                return Response({"error": "Wrong password"}, status=401)
 
-            # FIRST LOGIN LOGIC
-            if employee.is_first_login:
-
-                if not new_password:
-                    return Response({
-                        "message": "First login. Password change required.",
-                        "first_login": True
-                    })
-
-                employee.user.set_password(new_password)
-                employee.user.save()
-                employee.is_first_login = False
-                employee.save()
-
-            # 🔥 CREATE JWT TOKENS
-            refresh = RefreshToken.for_user(employee.user)
+            print("PASSWORD CORRECT")
+            
+            # --- GENERATE JWT TOKENS HERE ---
+            user = employee.user
+            refresh = RefreshToken.for_user(user)
+            
+            print("------ LOGIN SUCCESS ------\n")
 
             return Response({
                 "message": "Login successful",
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "employee_name": employee.user.get_full_name() or employee.user.username,
-                "organisation_id": str(employee.organisation.id),
-                "first_login": employee.is_first_login
-            })
+            }, status=200)
 
         except Employee.DoesNotExist:
-            return Response(
-                {"error": "Invalid credentials"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+            print("EMPLOYEE NOT FOUND")
+            return Response({"error": "Employee not found"}, status=401)
+
+        except Exception as e:
+            print("ERROR:", str(e))
+            return Response({"error": "Server error"}, status=500)
