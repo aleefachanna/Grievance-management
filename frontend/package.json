@@ -129,7 +129,6 @@
     "type-check": "^0.4.0",
     "update-browserslist-db": "^1.2.3",
     "uri-js": "^4.4.1",
-    "vite": "^7.3.1",
     "which": "^2.0.2",
     "word-wrap": "^1.2.5",
     "yallist": "^3.1.1",
@@ -138,10 +137,17 @@
     "zod-validation-error": "^4.0.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "vite": "^7.3.1"
+  }
 }
