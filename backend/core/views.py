@@ -1,71 +1,105 @@
-
-import uuid
+from urllib import request
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
 from django.conf import settings
-from django.http import JsonResponse
-# Use relative imports (the dot means 'this current app folder')
-from datetime import timezone
-
-from django.http import request
-from .models import DepartmentWork, Department, Complaint, Employee
-from django.contrib.auth import login
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-# Ensure your file is named service.py or utils.py and match it here
-from .service import classify_and_summarize, summarize_department_work, ai_assign_works  # Assuming your model is named Employee
+# ... keep your other imports like APIView, Response, etc.
+from .models import Complaint, Department, DepartmentWork, Employee,Manager
 from organisation.models import Organisation
+from .serializers import ComplaintSerializer, DepartmentWorkSerializer, OrganisationSerializer
+from .service import classify_and_summarize, summarize_department_work, ai_assign_works
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .serializers import ComplaintTrackSerializer
+from django.contrib.auth.hashers import check_password
+from rest_framework.decorators import api_view
+from django.utils import timezone
 from django.db.models import Count
-def dep_login(request):
-    if request.method == 'POST':
-        dep_id = request.POST.get('Dep_id')
-        emp_id = request.POST.get('Emp_id')
+from django.http import JsonResponse
+@api_view(['POST'])
+def manager_login(request):
+    manager_id = request.data.get("manager_id")
+
+    try:
+        manager = Manager.objects.get( manager_id=manager_id)
+        return Response({
+            "message": "Login successful",  
+            "manager_id": manager.manager_id,
+            "org_id": manager.organisation.id   
+        })
+    except Manager.DoesNotExist:
+        return Response({"error": "Invalid credentials"}, status=400)
+
+@api_view(['GET'])
+def track_complaint(request, complaint_id):
+    try:
+        complaint = Complaint.objects.get(complaint_id=complaint_id)
+        serializer = ComplaintTrackSerializer(complaint)
+        return Response(serializer.data)
+    except Complaint.DoesNotExist:
+        return Response(
+            {"error": "Complaint not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+# 1. CUSTOM LOGIN (Returns JWT)
+class LoginView(APIView):
+    def post(self, request):
+        dep_id = request.data.get('Dep_id')
+        emp_id = request.data.get('Emp_id')
+        
+        try:
+            employee = Employee.objects.get(department__dept_id=dep_id, employeeid=emp_id)
+            user = employee.user
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'employee_name': employee.name
+            })
+        except Employee.DoesNotExist:
+            return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+# 2. SUBMIT COMPLAINT (Public API)
+class SubmitComplaintView(APIView):
+    # This replaces the "organisations = Organisation.objects.all()" part
+    def get(self, request):
+        organisations = Organisation.objects.all()
+        serializer = OrganisationSerializer(organisations, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        # React sends data as JSON, accessible via request.data
+        org_id = request.data.get('organisation')
+        description = request.data.get('description')
+        email = request.data.get('email')
 
         try:
-            # Look for the employee matching both credentials
-            employee = Employee.objects.get(department__dept_id=dep_id, employeeid=emp_id)
-            
-            # Link the Employee's user account to the session
-            # Note: This assumes your Employee model has a OneToOne relationship with User
-            user = employee.user 
-            login(request, user)
-            
-            messages.success(request, f"Welcome back, {employee.name}!")
-            return redirect('dashboard')  # Replace with your target URL name
+            organisation = Organisation.objects.get(id=org_id)
+        except Organisation.DoesNotExist:
+            return Response({"error": "Organisation not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        except Employee.DoesNotExist:
-            messages.error(request, "Invalid Department ID or Employee ID.")
-            return render(request, 'login.html')
-
-    return render(request, 'login.html')
-
-def submit_complaint(request):
-    if request.method == "POST":
-        org_id = request.POST.get('organisation')
-        description = request.POST.get('description')
-        email = request.POST.get('email')
-
-        organisation = Organisation.objects.get(id=org_id)
         dept_queryset = Department.objects.filter(organisation=organisation)
         dept_names = list(dept_queryset.values_list('name', flat=True))
 
-        # ✅ Always create complaint first
+        # ✅ Create complaint
         complaint = Complaint.objects.create(
             user_email=email,
             organisation=organisation,
             description=description,
         )
 
+        ai_status = "success"
         try:
-            # ✅ Call AI
+            # ✅ AI Processing
             ai_result = classify_and_summarize(description, dept_names)
-
             departments = ai_result.get("departments", [])
             summary = ai_result.get("summary", "")
-            severity = ai_result.get("severity", "0")
+            severity = str(ai_result.get("severity", "0"))
 
-            # ✅ Validate severity
             if severity not in ["0", "1", "2", "3", "4", "5"]:
                 severity = "0"
 
@@ -73,167 +107,170 @@ def submit_complaint(request):
             complaint.severity = severity
             complaint.save()
 
-            # ✅ Set many-to-many safely
             if departments:
                 dept_objects = Department.objects.filter(name__in=departments)
                 complaint.departments.set(dept_objects)
-            else:
-                complaint.departments.clear()
-
-            messages.success(request, "Complaint submitted and analyzed successfully!")
 
         except Exception as e:
-            # ✅ Complaint still exists even if AI fails
+            ai_status = f"failed: {str(e)}"
             complaint.ai_summary = ""
             complaint.severity = "0"
             complaint.save()
 
-            messages.warning(
-                request,
-                f"Complaint submitted, but AI analysis failed: {e}"
-            )
+        # ✅ Email Logic
+        self.send_confirmation_email(complaint, organisation, email)
 
-        # ✅ Send confirmation email
+        return Response({
+            "message": "Complaint submitted successfully",
+            "ai_status": ai_status,
+            "complaint_id": complaint.complaint_id
+        }, status=status.HTTP_201_CREATED)
+
+    def send_confirmation_email(self, complaint, organisation, email):
         email_body = f"""
 Hello,
-
 Your complaint has been registered successfully.
-
 Complaint ID: {complaint.complaint_id}
-
 Organisation: {organisation.name}
 Severity Level: {complaint.severity}
-
 We will review your complaint shortly.
-
-Thank you.
 """
-
         mail = EmailMessage(
             subject="Complaint Registered Successfully",
             body=email_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[email],
         )
-
         mail.send(fail_silently=False)
 
-        return redirect('submit_complaint')
+# 3. DASHBOARD (Protected API)
+class DepartmentDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    organisations = Organisation.objects.all()
-    return render(request, 'submit_form.html', {'organisations': organisations})
-
-@login_required
-def dep_dashboard(request):
-    try:
+    def get(self, request):
         employee = Employee.objects.get(user=request.user)
         department = employee.department
-    except Employee.DoesNotExist:
-        messages.error(request, "You are not assigned to a department.")
-        return redirect('/Home/dlogin') # Or wherever appropriate
 
-    # Fetch initial data
-    complaints = Complaint.objects.filter(departments=department).order_by("-created_at")
-    works = DepartmentWork.objects.filter(department=department).order_by("-created_at")
-    ai_report = None
+        complaints = Complaint.objects.filter(
+            departments=department
+        ).order_by("-created_at")
 
-    if request.method == "POST":
-        action = request.POST.get("action")
+        works = DepartmentWork.objects.filter(
+            department=department
+        ).order_by("-created_at")
 
-        if action == "ai_assign":
-            handle_ai_assign(department, complaints, works)
-        elif action == "complete_work":
-            handle_complete_work(request, department)
-        elif action == "analyze":
-            ai_report = handle_analyze(department, complaints)
-        elif action == "new_status":
-            handle_status_update(request, department)
-        elif action == "create_work":
-            handle_create_work(request, department)
-        elif action == "assign_work":
-            handle_assign_work(request, department)
-        
-        
-        # If the action wasn't 'analyze' (which needs to stay on page to show report), 
-        # redirect to refresh and prevent double-POST.
-        if action != "analyze":
-            return redirect('/Home/depdashboard/')
+        return Response({
+            "department_name": department.name,
+            "complaints": ComplaintSerializer(complaints, many=True).data,
+            "works": DepartmentWorkSerializer(works, many=True).data,
+            "employees": [
+                {
+                    "id": e.id,
+                    "name": e.name
+                }
+                for e in Employee.objects.filter(department=department)
+            ]
+        })
 
-    context = {
-        "complaints": complaints,
-        "department": department,
-        "works": works,
-        "ai_report": ai_report,
-    }
-    return render(request, "dep_dashboard.html", context)
+    def post(self, request):
+        employee = Employee.objects.get(user=request.user)
+        department = employee.department
+        action = request.data.get("action")
 
-def handle_ai_assign(department, complaints, works):
-    complaints_list = complaints[:30]
-    works_list = works[:20]
+        # 1️⃣ Update Complaint Status
+        if action == "update_complaint_status":
+            complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
+            complaint.status = request.data.get("status")
+            if complaint.status == "CLOSED":
+                complaint.closed_at = timezone.now()
+            complaint.save()
+            return Response({"message": "Complaint updated"})
 
-    if not complaints_list or not works_list:
-        return
-
-    result = ai_assign_works(complaints_list, works_list)
-
-    for cid, titles in result.get("mapping", {}).items():
-        try:
-            c = Complaint.objects.get(id=cid)
-
-            w_objs = DepartmentWork.objects.filter(
-                title__in=titles,
+        # 2️⃣ Complete Work
+        if action == "complete_work":
+            work = DepartmentWork.objects.get(
+                id=request.data.get("work_id"),
                 department=department
             )
+            work.status = "DONE"
+            work.completed_at = timezone.now()
+            work.save()
+            return Response({"message": "Work completed"})
 
-            c.works.add(*w_objs)
+        # 3️⃣ Assign Employee to Work
+        if action == "assign_employee":
+            work = DepartmentWork.objects.get(id=request.data.get("work_id"))
+            emp = Employee.objects.get(id=request.data.get("employee_id"))
+            work.employees.add(emp)
+            return Response({"message": "Employee assigned"})
+
+        # 4️⃣ Create Work
+        if action == "create_work":
+            DepartmentWork.objects.create(
+                department=department,
+                title=request.data.get("title"),
+                description=request.data.get("description", "")
+            )
+            return Response({"message": "Work created"})
+
+        return Response({"error": "Invalid action"}, status=400)
+class ManagerDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        manager = Manager.objects.get(user=request.user)
+        org = manager.organisation
+
+        departments = Department.objects.filter(organisation=org)
+        complaints = Complaint.objects.filter(organisation=org)
+        works = DepartmentWork.objects.filter(
+            department__organisation=org
+        )
+
+        return Response({
+            "organisation": org.name,
+            "departments": [
+                {"id": d.id, "name": d.name}
+                for d in departments
+            ],
+            "complaints": ComplaintSerializer(complaints, many=True).data,
+            "works": DepartmentWorkSerializer(works, many=True).data,
+        })
+
+    def post(self, request):
+        manager = Manager.objects.get(user=request.user)
+        action = request.data.get("action")
+
+        # Reassign Complaint
+        if action == "reassign_complaint":
+            complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
+            department = Department.objects.get(id=request.data.get("department_id"))
+            cid = request.data.get("complaint_id") # Define this
+            new_status = request.data.get("status")
+            complaint.departments.set([department])
+            complaint.save()
+
+            return Response({"message": "Complaint reassigned"})
+
+        if not cid or not new_status:
+            return
+
+        try:
+            complaint = Complaint.objects.get(id=cid)
         except Complaint.DoesNotExist:
-            pass
+            return
 
+        if department not in complaint.departments.all():
+            return
 
-def handle_complete_work(request, department):
-    wid = request.POST.get("work_id")
-    if not wid:
-        return
+        complaint.status = new_status
 
-    try:
-        work = DepartmentWork.objects.get(id=wid, department=department)
-    except DepartmentWork.DoesNotExist:
-        return
+        if new_status == "CLOSED":
+            complaint.closed_at = timezone.now()
+        else:
+            complaint.closed_at = None
 
-    work.status = "DONE"
-    work.completed_at = timezone.now()
-    work.save()
-
-
-
-def handle_analyze(department, complaints):
-    texts = list(complaints.values_list("description", flat=True))[:30]
-    return summarize_department_work(texts, department.name)
-
-
-def handle_status_update(request, department):
-    cid = request.POST.get("complaint_id")
-    new_status = request.POST.get("new_status")
-
-    if not cid or not new_status:
-        return
-
-    try:
-        complaint = Complaint.objects.get(id=cid)
-    except Complaint.DoesNotExist:
-        return
-
-    if department not in complaint.departments.all():
-        return
-
-    complaint.status = new_status
-
-    if new_status == "CLOSED":
-        complaint.closed_at = timezone.now()
-    else:
-        complaint.closed_at = None
-
-    complaint.save()
+        complaint.save()
 
 
 def handle_create_work(request, department):

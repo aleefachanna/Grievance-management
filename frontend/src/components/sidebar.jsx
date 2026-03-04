@@ -1,8 +1,17 @@
 import React from 'react';
 import { LayoutDashboard, MessageSquare, LogOut, Building2, Settings } from 'lucide-react';
 import './sidebar.css';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
+  const navigate = useNavigate(); // 2. Initialize navigate
+
+  const handleLogout = () => {
+    // If you have any authentication logic (clearing tokens, etc.), put it here
+    // localStorage.removeItem('token'); 
+    
+    navigate('/'); // 3. Redirect to the Home route
+  };
   return (
     <div className="sidebar">
       <div className="sidebar-brand">
@@ -28,7 +37,7 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={20} />
           <span>Logout</span>
         </button>
