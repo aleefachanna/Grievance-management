@@ -142,15 +142,25 @@ class ComplaintTrackSerializer(serializers.ModelSerializer):
 class DepartmentWorkSerializer(serializers.ModelSerializer):
     department = serializers.CharField(source="department.name", read_only=True)
     complaint = serializers.CharField(source="complaint.complaint_id", read_only=True)
+    assigned_employees = serializers.SerializerMethodField()
 
     class Meta:
         model = DepartmentWork
         fields = [
             "id",
+            "title",
+            "description",
             "complaint",
             "department",
             "status",
+            "assigned_employees",
             "created_at",
             "closed_at",
         ]
-        read_only_fields = fields
+        read_only_fields = ["id", "department", "complaint", "status", "created_at", "closed_at", "assigned_employees"]
+        
+    def get_assigned_employees(self, obj):
+        return [
+            {"id": str(emp.id), "name": emp.user.get_full_name() or emp.user.username}
+            for emp in obj.employees.all()
+        ]

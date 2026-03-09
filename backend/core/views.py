@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from django.utils.text import slugify
 from .models import Complaint, Department, DepartmentWork, Employee, Manager, Organisation
 from .serializers import (
     ComplaintDetailSerializer,
@@ -54,8 +55,13 @@ def send_email(subject: str, body: str, to_email: str):
 @api_view(['GET'])
 def get_organisation(request, slug: str):
     org = get_object_or_404(Organisation, slug=slug, is_active=True)
-    serializer = OrganisationSerializer(org)
-    return Response(serializer.data)
+    org_data = OrganisationSerializer(org).data
+    
+    # Also fetch recent active complaints for accountability transparency
+    complaints = Complaint.objects.filter(organisation=org).order_by('-created_at')[:20]
+    org_data['recent_complaints'] = ComplaintTrackSerializer(complaints, many=True).data
+
+    return Response(org_data)
 
 
 
@@ -74,6 +80,7 @@ def search_organisations(request):
 
     results = [
         {
+            'id': str(org.id),
             'name': org.name,
             'slug': org.slug,
             'type': org.get_organisation_type_display(),
@@ -109,13 +116,13 @@ def create_employee(data):
 
 @api_view(['POST'])
 def manager_login(request):
-    manager_id = request.data.get("manager_id")
+    email = request.data.get("email")
     password = request.data.get("password", "")
 
     try:
-        manager = Manager.objects.get(id=manager_id)
+        manager = Manager.objects.get(user__email=email)
 
-        if not manager.check_password(password):
+        if not manager.user.check_password(password):
             raise Manager.DoesNotExist
 
         refresh = RefreshToken.for_user(manager.user)
@@ -269,7 +276,129 @@ class ManagerDashboardView(APIView):
         return Response({"error": "Invalid action"}, status=400)
 
 
-# =========================================================
-# EMPLOYEE CREATION UTILITY
-# =========================================================
+class CreateOrganisationView(APIView):
+    permission_classes = [AllowAny]
 
+    @transaction.atomic
+    def post(self, request):
+        data = request.data
+        
+        name = data.get("orgName")
+        slug = slugify(name)
+        base_slug = slug
+        counter = 1
+        while Organisation.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+            
+        org = Organisation.objects.create(
+            name=name,
+            slug=slug,
+            organisation_type="private",
+            official_email=data.get("email"),
+            city=data.get("city"),
+            state=data.get("state"),
+            country=data.get("country"),
+            description=data.get("address", "")
+        )
+        
+        admin_email = data.get("adminEmail")
+        temp_password = secrets.token_urlsafe(8)
+        
+        user = User.objects.create(
+            username=admin_email,
+            email=admin_email,
+            password=make_password(temp_password),
+            first_name=data.get("adminName", "")
+        )
+        
+        manager = Manager.objects.create(
+            user=user,
+            organisation=org,
+            is_owner=True
+        )
+        
+        return Response({
+            "message": "Organisation created successfully",
+            "manager_email": admin_email,
+            "password": temp_password,
+            "organisation_slug": org.slug
+        }, status=status.HTTP_201_CREATED)
+
+class DepartmentManagerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        manager = get_object_or_404(Manager, user=request.user)
+        departments = Department.objects.filter(organisation=manager.organisation)
+        return Response([{"id": str(d.id), "name": d.name, "description": d.description} for d in departments])
+
+    def post(self, request):
+        manager = get_object_or_404(Manager, user=request.user)
+        name = request.data.get("name")
+        description = request.data.get("description", "")
+        
+        if Department.objects.filter(organisation=manager.organisation, name=name).exists():
+            return Response({"error": "Department with this name already exists"}, status=400)
+            
+        dept = Department.objects.create(
+            organisation=manager.organisation,
+            name=name,
+            description=description
+        )
+        return Response({"id": str(dept.id), "name": dept.name, "description": dept.description}, status=201)
+
+class EmployeeManagerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        manager = get_object_or_404(Manager, user=request.user)
+        employees = Employee.objects.filter(organisation=manager.organisation)
+        return Response([{
+            "id": str(e.id),
+            "employee_id": e.employee_id,
+            "name": e.user.first_name,
+            "email": e.user.email,
+            "department": e.department.name if e.department else None,
+            "department_id": str(e.department.id) if e.department else None,
+            "is_hod": e.isHod,
+            "is_active": e.is_active
+        } for e in employees])
+
+    @transaction.atomic
+    def post(self, request):
+        manager = get_object_or_404(Manager, user=request.user)
+        data = request.data
+        
+        dept_id = data.get("department_id")
+        dept = get_object_or_404(Department, id=dept_id, organisation=manager.organisation)
+        
+        email = data.get("email")
+        if User.objects.filter(username=email).exists():
+            return Response({"error": "User with this email already exists"}, status=400)
+            
+        temp_password = secrets.token_urlsafe(8)
+        
+        user = User.objects.create(
+            username=email,
+            email=email,
+            password=make_password(temp_password),
+            first_name=data.get("name", "")
+        )
+        
+        employee_id = f"EMP-{manager.organisation.slug[:3].upper()}-{secrets.token_hex(2).upper()}"
+        
+        emp = Employee.objects.create(
+            user=user,
+            organisation=manager.organisation,
+            department=dept,
+            employee_id=employee_id,
+            isHod=data.get("is_hod", False)
+        )
+        
+        return Response({
+            "message": "Employee created successfully",
+            "employee_id": emp.employee_id,
+            "email": user.email,
+            "password": temp_password
+        }, status=201)

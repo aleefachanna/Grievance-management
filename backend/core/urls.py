@@ -14,6 +14,9 @@ from .views import (
     track_complaint,
     SubmitComplaintView,
     ManagerDashboardView,
+    CreateOrganisationView,
+    DepartmentManagerView,
+    EmployeeManagerView,
 )
 router = DefaultRouter()
 router.register(r"department/complaints", DepartmentComplaintViewSet, basename="dept-complaints")
@@ -44,5 +47,8 @@ urlpatterns = [
 
     # ---------------- Manager Dashboard ----------------
     path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
+    path('organisation/create/', CreateOrganisationView.as_view(), name='create_organisation'),
+    path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
+    path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
 ]
 urlpatterns += router.urls

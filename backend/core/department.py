@@ -59,9 +59,28 @@ class DepartmentWorkViewSet(viewsets.ModelViewSet):
         employee = self.request.user.employee
 
         if not employee.isHod:
-            raise PermissionDenied("Only HOD can create work")
+            return Response({"error": "Only HOD can create work"}, status=403)
 
-        serializer.save(department=employee.department)
+        # Handle organisation boundary internally via self.request
+        work = serializer.save(
+            department=employee.department, 
+            organisation=employee.organisation
+        )
+        
+        # Link Complaint if provided
+        complaint_id = self.request.data.get("complaint_id")
+        if complaint_id:
+            try:
+                complaint = Complaint.objects.get(id=complaint_id, department=employee.department)
+                complaint.works.add(work)
+            except Complaint.DoesNotExist:
+                pass
+
+        # Assign employees if provided
+        assigned_employee_ids = self.request.data.get("assigned_employees", [])
+        if assigned_employee_ids:
+            emps = Employee.objects.filter(id__in=assigned_employee_ids, department=employee.department)
+            work.employees.set(emps)
 
     # 🔹 Assign employee to work
     @action(detail=True, methods=["post"])

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { api } from './api';
 import './CreateOrg.css';
 
 const CreateOrg = () => {
@@ -18,6 +19,10 @@ const CreateOrg = () => {
     website: ''
   });
 
+  const [successData, setSuccessData] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -34,9 +39,19 @@ const CreateOrg = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting Organisation:", formData);
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await api.post('/organisation/create/', formData);
+      setSuccessData(res.data);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to create organisation");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const categoryOptions = [
@@ -49,15 +64,34 @@ const CreateOrg = () => {
     { label: 'Cooperative Society', value: 'cooperative' }
   ];
 
+  if (successData) {
+    return (
+      <div className="wrapper">
+        <div className="card" style={{ textAlign: "center" }}>
+          <h2 style={{ color: "#2ecc71" }}>Organisation Created!</h2>
+          <p>Save these credentials for your Manager Login:</p>
+          <div style={{ background: "#f4f4f4", padding: "15px", margin: "20px 0", borderRadius: "8px", borderLeft: "4px solid #2ecc71" }}>
+            <p><strong>Manager Email:</strong> {successData.manager_email}</p>
+            <p><strong>Temporary Password:</strong> {successData.password}</p>
+            <p><strong>Org Slug:</strong> {successData.organisation_slug}</p>
+          </div>
+          <a href="/manager-login" className="submit-button" style={{ display: "inline-block", textDecoration: "none", marginTop: "20px" }}>Go to Login</a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="wrapper">
       <div className="card">
         <div className="brand-header">
           <h1 className="brand-title">ResolvePro</h1>
         </div>
-        
+
         <h2 className="form-title">Create New Organisation</h2>
         <p className="subtitle">Please provide the official details for registration.</p>
+
+        {error && <div style={{ color: "red", marginBottom: "15px" }}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
           {/* Section: Organisation Basic Info */}
@@ -104,9 +138,9 @@ const CreateOrg = () => {
           <div className="checkbox-grid">
             {categoryOptions.map((opt) => (
               <label key={opt.value} className="checkbox-item">
-                <input 
-                  type="checkbox" 
-                  value={opt.value} 
+                <input
+                  type="checkbox"
+                  value={opt.value}
                   checked={formData.categories.includes(opt.value)}
                   onChange={handleCategoryChange}
                 />
@@ -145,8 +179,8 @@ const CreateOrg = () => {
             </div>
           </div>
 
-          <button type="submit" className="submit-button">
-            Register Organisation
+          <button type="submit" className="submit-button" disabled={loading}>
+            {loading ? "Registering..." : "Register Organisation"}
           </button>
         </form>
       </div>
