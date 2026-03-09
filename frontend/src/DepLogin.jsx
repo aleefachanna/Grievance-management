@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
-import './style.css'; // Ensure this matches your CSS filename
+import './style.css';
 
 function DepLogin() {
     const [credentials, setCredentials] = useState({ Dep_id: '', Emp_id: '' });
@@ -10,7 +10,6 @@ function DepLogin() {
     const handleLogin = async (e) => {
         if (e) e.preventDefault(); 
         try {
-            // Integration with your existing axios 'api' instance
             const res = await api.post('emplogin/', credentials);
             
             localStorage.setItem('access_token', res.data.access);
@@ -26,6 +25,24 @@ function DepLogin() {
     return (
         <div className="resolve-wrapper">
             <div className="resolve-card">
+
+                {/* Back to Home Button */}
+                <button 
+                    onClick={() => navigate('/')}
+                    className="resolve-back-icon-btn"
+                    title="Back to Home"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path 
+                            d="M19 12H5M5 12L12 19M5 12L12 5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </button>
+
                 <div className="resolve-logo-area">
                     <span className="resolve-logo-text">ResolvePro</span>
                 </div>

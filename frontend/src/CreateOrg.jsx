@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './CreateOrg.css';
+import { useNavigate } from 'react-router-dom';
+import './style.css'; 
 
 const CreateOrg = () => {
   const [formData, setFormData] = useState({
@@ -17,27 +18,19 @@ const CreateOrg = () => {
     phone: '',
     website: ''
   });
+  
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Specialized handler for multiple checkboxes
-  const handleCategoryChange = (e) => {
-    const { value, checked } = e.target;
-    const { categories } = formData;
-
-    if (checked) {
-      setFormData({ ...formData, categories: [...categories, value] });
-    } else {
-      setFormData({ ...formData, categories: categories.filter((cat) => cat !== value) });
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitting Organisation:", formData);
+    // Integration logic goes here
   };
+
 
   const categoryOptions = [
     { label: 'For-Profit', value: 'for_profit' },
@@ -50,102 +43,122 @@ const CreateOrg = () => {
   ];
 
   return (
-    <div className="wrapper">
-      <div className="card">
-        <div className="brand-header">
-          <h1 className="brand-title">ResolvePro</h1>
+    <div className="resolve-wrapper">
+      {/* Use the wide variant of the card for multi-column forms */}
+      <div className="resolve-card resolve-card-wide">
+        
+        {/* Modern Arrow Back Button */}
+        <button 
+          onClick={() => navigate('/')}
+          className="resolve-back-icon-btn"
+          title="Back to Home"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        <div className="resolve-logo-area">
+          <span className="resolve-logo-text">ResolvePro</span>
         </div>
         
-        <h2 className="form-title">Create New Organisation</h2>
-        <p className="subtitle">Please provide the official details for registration.</p>
+        <h2 className="resolve-header" style={{ textAlign: 'center', color: '#B76B5C' }}>
+          Create New Organisation
+        </h2>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px', fontSize: '14px' }}>
+          Please provide the official details for registration.
+        </p>
 
         <form onSubmit={handleSubmit}>
-          {/* Section: Organisation Basic Info */}
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
-              <label className="form-label">Organisation Name *</label>
-              <input className="form-input" type="text" name="orgName" placeholder="Legal Name" onChange={handleChange} required />
-            </div>
+          <div className="resolve-input-group">
+            <label className="resolve-label">Organisation Name *</label>
+            <input 
+              className="resolve-input" 
+              type="text" 
+              name="orgName" 
+              placeholder="Enter full legal name"
+              onChange={handleChange} 
+              required 
+            />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">CIN (Corporate ID) *</label>
-              <input className="form-input" type="text" name="cin" placeholder="U12345..." onChange={handleChange} required />
+          <div className="resolve-row">
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">Select Type *</label>
+                <select className="resolve-input" name="type" onChange={handleChange} required>
+                  <option value="">Choose...</option>
+                  <option value="corporate">Corporate</option>
+                  <option value="ngo">NGO</option>
+                  <option value="govt">Government</option>
+                  <option value="edu">Educational</option>
+                </select>
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">GSTIN *</label>
-              <input className="form-input" type="text" name="gstin" placeholder="15-digit ID" onChange={handleChange} required />
-            </div>
-          </div>
-
-          <div className="form-group form-group-full">
-            <label className="form-label">Office Address *</label>
-            <textarea className="form-textarea" name="address" placeholder="Street address..." onChange={handleChange} required />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">City *</label>
-              <input className="form-input" type="text" name="city" onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">State *</label>
-              <input className="form-input" type="text" name="state" onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Country *</label>
-              <input className="form-input" type="text" name="country" onChange={handleChange} required />
-            </div>
-          </div>
-
-          {/* Section: Categories (Multi-select) */}
-          <div className="section-divider">Organisation Categories</div>
-          <div className="checkbox-grid">
-            {categoryOptions.map((opt) => (
-              <label key={opt.value} className="checkbox-item">
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">Official Email *</label>
                 <input 
-                  type="checkbox" 
-                  value={opt.value} 
-                  checked={formData.categories.includes(opt.value)}
-                  onChange={handleCategoryChange}
+                  className="resolve-input" 
+                  type="email" 
+                  name="email" 
+                  placeholder="contact@org.com"
+                  onChange={handleChange} 
+                  required 
                 />
-                <span>{opt.label}</span>
-              </label>
-            ))}
-          </div>
-
-          {/* Section: Admin Details */}
-          <div className="section-divider">Admin Details</div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Admin Full Name *</label>
-              <input className="form-input" type="text" name="adminName" placeholder="John Doe" onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Admin Email *</label>
-              <input className="form-input" type="email" name="adminEmail" placeholder="admin@org.com" onChange={handleChange} required />
+              </div>
             </div>
           </div>
 
-          {/* Section: Contact Info */}
-          <div className="section-divider">Contact Information</div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Official Email *</label>
-              <input className="form-input" type="email" name="email" placeholder="contact@org.com" onChange={handleChange} required />
+          <div className="resolve-row">
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">Contact Phone *</label>
+                <input 
+                  className="resolve-input" 
+                  type="tel" 
+                  name="phone" 
+                  placeholder="+1 234 567 890"
+                  onChange={handleChange} 
+                  required 
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Contact Phone *</label>
-              <input className="form-input" type="tel" name="phone" placeholder="+91..." onChange={handleChange} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Website</label>
-              <input className="form-input" type="url" name="website" placeholder="https://..." onChange={handleChange} />
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">Website</label>
+                <input 
+                  className="resolve-input" 
+                  type="url" 
+                  name="website" 
+                  placeholder="https://www.example.com"
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
           </div>
 
-          <button type="submit" className="submit-button">
+          <div className="resolve-row">
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">City *</label>
+                <input className="resolve-input" type="text" name="city" onChange={handleChange} required />
+              </div>
+            </div>
+            <div className="resolve-col">
+              <div className="resolve-input-group">
+                <label className="resolve-label">State *</label>
+                <input className="resolve-input" type="text" name="state" onChange={handleChange} required />
+              </div>
+            </div>
+          </div>
+
+          <div className="resolve-input-group">
+            <label className="resolve-label">Country *</label>
+            <input className="resolve-input" type="text" name="country" onChange={handleChange} required />
+          </div>
+
+          <button type="submit" className="resolve-btn">
             Register Organisation
           </button>
         </form>
@@ -154,4 +167,4 @@ const CreateOrg = () => {
   );
 };
 
-export default CreateOrg;
+export default CreateOrg; 

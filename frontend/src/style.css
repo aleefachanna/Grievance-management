@@ -1,6 +1,8 @@
 /* --- Global Reset & Wrapper --- */
 .resolve-wrapper {
-  background-color: #FFF3B8;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #210E2A 0%, #2D1A3A 100%);
+    color: white;
   min-height: 100vh;
   width: 100vw;
   display: flex;
@@ -95,19 +97,22 @@
   width: 100%;
   padding: 14px;
   background-color: #859E75; 
-  color: white;
+  color: black;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
   margin-top: 15px;
-  transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(133, 158, 117, 0.3);
 }
 
 .resolve-btn:hover {
-  background-color: #210E2A; /* Your requested hover color */
-  transform: translateY(-1px);
+      background-color: #FFF3B8;
+    color: #210E2A;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 243, 184, 0.4);
 }
 .resolve-input {
   width: 100%;

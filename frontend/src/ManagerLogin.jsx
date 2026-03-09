@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./style.css"; // Import the new file
+import "./style.css";
 
 function ManagerLogin() {
   const [orgId, setOrgId] = useState("");
@@ -13,12 +13,14 @@ function ManagerLogin() {
     e.preventDefault();
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/manager-login/", {
-          org_id: orgId,
-          manager_id: managerId,
-          password: password,
+        org_id: orgId,
+        manager_id: managerId,
+        password: password,
       });
+
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("role", "manager");
+
       navigate("/managerdashboard");
     } catch (error) {
       alert(error.response?.data?.message || "Invalid credentials");
@@ -28,9 +30,28 @@ function ManagerLogin() {
   return (
     <div className="resolve-wrapper">
       <div className="resolve-card">
+
+        {/* Back to Home Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="resolve-back-icon-btn"
+          title="Back to Home"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M19 12H5M5 12L12 19M5 12L12 5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
         <div className="resolve-logo-area">
           <span className="resolve-logo-text">ResolvePro</span>
         </div>
+
         <h2 className="resolve-header">Manager Login</h2>
 
         <form onSubmit={handleLogin}>
@@ -74,6 +95,7 @@ function ManagerLogin() {
             Sign In
           </button>
         </form>
+
       </div>
     </div>
   );

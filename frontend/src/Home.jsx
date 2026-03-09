@@ -44,7 +44,7 @@ function Home() {
 
           {/* Dropdown for Login */}
           <div className="dropdown">
-            <a href="/login" className="login">Login</a>
+            <a>Login</a>
             <div className="dropdown-content">
               <a href="/create-org">Create Organization</a>
               <a href="/manager-login">Manager Login</a>
