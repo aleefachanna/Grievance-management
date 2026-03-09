@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 import secrets
+from datetime import timedelta
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -60,6 +61,22 @@ def get_organisation(request, slug: str):
     # Also fetch recent active complaints for accountability transparency
     complaints = Complaint.objects.filter(organisation=org).order_by('-created_at')[:20]
     org_data['recent_complaints'] = ComplaintTrackSerializer(complaints, many=True).data
+
+    # Add statistics
+    total_complaints = Complaint.objects.filter(organisation=org).count()
+    resolved_complaints = Complaint.objects.filter(organisation=org, status="CLOSED").count()
+    total_departments = Department.objects.filter(organisation=org).count()
+    total_employees = Employee.objects.filter(organisation=org).count()
+    
+    org_data['stats'] = {
+        'total_complaints': total_complaints,
+        'resolved_complaints': resolved_complaints,
+        'total_departments': total_departments,
+        'total_employees': total_employees
+    }
+    
+    departments = Department.objects.filter(organisation=org)
+    org_data['departments'] = [{"id": str(d.id), "name": d.name} for d in departments]
 
     return Response(org_data)
 
@@ -165,7 +182,8 @@ class SubmitComplaintView(APIView):
         complaint = Complaint.objects.create(
             organisation=organisation,
             description=description,
-            user_email=email
+            user_email=email,
+            attachment=request.FILES.get("attachment")
         )
 
         dept_queryset = Department.objects.filter(organisation=organisation)
@@ -193,12 +211,18 @@ class SubmitComplaintView(APIView):
                 ).first()
                 if dept_obj:
                     complaint.department = dept_obj
+                    
+            # Calculate SLA deadline
+            deadline_map = {"5": 1, "4": 3, "3": 7, "2": 14, "1": 30, "0": 30}
+            days = deadline_map.get(severity, 30)
+            complaint.deadline = timezone.now() + timedelta(days=days)
 
             complaint.save()
 
         except Exception as e:
             ai_status = f"failed: {str(e)}"
             complaint.severity = "0"
+            complaint.deadline = timezone.now() + timedelta(days=30)
             complaint.save()
 
         email_body = f"""

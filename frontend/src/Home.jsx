@@ -40,7 +40,7 @@ function Home() {
         </button>
         <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
           <a href="/track">Track Complaint</a>
-          <a href="/organisation">Organization</a>
+          <a href="/organisations">Organizations</a>
 
           {/* Dropdown for Login */}
           <div className="dropdown">

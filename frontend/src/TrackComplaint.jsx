@@ -59,12 +59,45 @@ const TrackComplaint = () => {
 
         {complaintData && (
           <div style={{ marginTop: "25px", padding: "20px", background: "#f8f9fa", borderRadius: "8px", borderLeft: "4px solid #3498db" }}>
-            <h3 style={{ margin: "0 0 15px 0", color: "#2c3e50" }}>Status: {complaintData.status}</h3>
+            <h3 style={{ margin: "0 0 15px 0", color: "#2c3e50", display: 'flex', justifyContent: 'space-between' }}>
+              Status: {complaintData.status}
+              {complaintData.deadline && complaintData.status !== 'CLOSED' && (
+                <span style={{ fontSize: '12px', background: new Date(complaintData.deadline) < new Date() ? '#e74c3c' : '#bdc3c7', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
+                  Due: {new Date(complaintData.deadline).toLocaleDateString()}
+                </span>
+              )}
+            </h3>
             <p style={{ margin: "5px 0" }}><strong>Organisation:</strong> {complaintData.organisation}</p>
             <p style={{ margin: "5px 0" }}><strong>Department:</strong> {complaintData.department || "Unassigned"}</p>
             <p style={{ margin: "5px 0" }}><strong>Severity:</strong> {complaintData.severity}/5</p>
             <hr style={{ margin: "15px 0", borderTop: "1px solid #ddd" }} />
             <p style={{ margin: 0, color: "#555" }}>{complaintData.description}</p>
+
+            {complaintData.attachment && (
+              <div style={{ marginTop: '15px' }}>
+                <a href={complaintData.attachment} target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#3498db', color: 'white', padding: '6px 12px', borderRadius: '4px', textDecoration: 'none', fontSize: '13px' }}>
+                  📎 View Attachment
+                </a>
+              </div>
+            )}
+
+            {complaintData.public_updates && complaintData.public_updates.length > 0 && (
+              <div style={{ marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>Timeline & Updates</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {complaintData.public_updates.map(update => (
+                    <div key={update.id} style={{ background: '#fff', border: '1px solid #eee', padding: '10px', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '11px', color: '#7f8c8d' }}>
+                        <strong>{update.author}</strong>
+                        <span>{new Date(update.created_at).toLocaleString()}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#2c3e50' }}>{update.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 

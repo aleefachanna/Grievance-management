@@ -7,9 +7,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from core.models import Employee, Complaint, DepartmentWork
+from core.models import Employee, Complaint, DepartmentWork, ComplaintUpdate
 from core.serializers import ComplaintDetailSerializer, DepartmentWorkSerializer
 from core.service import ai_assign_works, summarize_department_work
+from core.views import send_email
 
 
 class AIAssignView(APIView):
@@ -131,6 +132,7 @@ class DepartmentComplaintViewSet(viewsets.ModelViewSet):
         complaint = self.get_object()
         employee = request.user.employee
         new_status = request.data.get("status")
+        old_status = complaint.status
 
         if new_status == "CLOSED":
             if employee.isHod:
@@ -139,15 +141,43 @@ class DepartmentComplaintViewSet(viewsets.ModelViewSet):
             else:
                 complaint.status = "REQUESTED_CLOSE"
         else:
-            if not employee.isHod:
+            if not employee.isHod and new_status not in ["WORKING", "PENDING"]:
                 return Response(
-                    {"error": "Only HOD can update status"},
+                    {"error": "Only HOD can update status to something other than WORKING"},
                     status=403
                 )
             complaint.status = new_status
 
         complaint.save()
+        
+        # Trigger email logic
+        if complaint.status in ["WORKING", "CLOSED"] and complaint.user_email and old_status != complaint.status:
+            email_body = f"Hello,\n\nThe status of your complaint ({complaint.complaint_id}) has been updated to {complaint.status}.\n\nRegards,\n{employee.organisation.name}"
+            try:
+                send_email("Complaint Status Update", email_body, complaint.user_email)
+            except Exception as e:
+                print("Failed to send status update email:", e)
+
         return Response(self.get_serializer(complaint).data)
+
+    @action(detail=True, methods=["post"])
+    def add_update(self, request, pk=None):
+        complaint = self.get_object()
+        employee = request.user.employee
+        
+        message = request.data.get("message")
+        is_public = request.data.get("is_public", False)
+        
+        if not message:
+            return Response({"error": "Message is required"}, status=400)
+            
+        ComplaintUpdate.objects.create(
+            complaint=complaint,
+            author=employee.user,
+            message=message,
+            is_public=is_public
+        )
+        return Response({"message": "Update added successfully"})
 class DepartmentDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 

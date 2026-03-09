@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import api from './api';
-import './style.css'; // Utilizing shared styles
+import './style.css';
 
 function OrgView() {
   const { slug } = useParams();
@@ -32,7 +33,7 @@ function OrgView() {
     return (
       <div className="resolve-wrapper" style={{ justifyContent: 'center', textAlign: 'center' }}>
         <h2 style={{ color: '#e74c3c' }}>Organisation Not Found</h2>
-        <button onClick={() => navigate('/search')} className="resolve-btn" style={{ marginTop: '20px' }}>
+        <button onClick={() => navigate('/organisations')} className="resolve-btn" style={{ marginTop: '20px' }}>
           Back to Search
         </button>
       </div>
@@ -43,7 +44,7 @@ function OrgView() {
     <div style={{ maxWidth: '1000px', margin: '40px auto', padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
       {/* Back Button */}
       <button
-        onClick={() => navigate('/search')}
+        onClick={() => navigate('/organisations')}
         style={{
           background: 'none',
           border: 'none',
@@ -100,8 +101,49 @@ function OrgView() {
               <div><strong>Location:</strong> {org.city}, {org.state}, {org.country}</div>
               {org.website && <div><strong>Website:</strong> <a href={org.website} target="_blank" rel="noreferrer" style={{ color: '#3498db', textDecoration: 'none' }}>{org.website}</a></div>}
             </div>
+
+            <div style={{ marginTop: '20px', textAlign: 'center', background: '#fff', padding: '15px', borderRadius: '8px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#7f8c8d' }}>Scan to view page</h4>
+              <QRCodeSVG value={window.location.href} size={150} />
+            </div>
           </div>
         </div>
+
+        {/* Statistics Dashboard */}
+        {org.stats && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#3498db' }}>{org.stats.total_complaints}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Total Complaints</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#27ae60' }}>{org.stats.resolved_complaints}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Resolved Cases</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#9b59b6' }}>{org.stats.total_employees}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Active Staff</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#f39c12' }}>{org.stats.total_departments}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Departments</span>
+            </div>
+          </div>
+        )}
+
+        {/* Departments List */}
+        {org.departments && org.departments.length > 0 && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '30px' }}>
+            <h3 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>Departments</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {org.departments.map(d => (
+                <span key={d.id} style={{ background: '#e8ecef', padding: '8px 15px', borderRadius: '20px', fontSize: '14px', color: '#34495e', fontWeight: '500' }}>
+                  {d.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Public Complaints Section */}

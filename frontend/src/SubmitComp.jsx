@@ -7,7 +7,8 @@ const SubmitGrievance = () => {
   const [formData, setFormData] = useState({
     email: '',
     organisation: '',
-    description: ''
+    description: '',
+    attachment: null
   });
   const [organisations, setOrganisations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,13 +37,20 @@ const SubmitGrievance = () => {
     try {
       const selectedOrg = organisations.find(o => o.slug === formData.organisation);
 
-      const payload = {
-        email: formData.email,
-        organisation: selectedOrg ? selectedOrg.id : formData.organisation,
-        description: formData.description
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('organisation', selectedOrg ? selectedOrg.id : formData.organisation);
+      formDataToSend.append('description', formData.description);
 
-      const response = await api.post("/complaint/submit/", payload);
+      if (formData.attachment) {
+        formDataToSend.append('attachment', formData.attachment);
+      }
+
+      const response = await api.post("/complaint/submit/", formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       setSuccessId(response.data.complaint_id);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to submit grievance");
@@ -135,6 +143,17 @@ const SubmitGrievance = () => {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
+              />
+            </div>
+
+            <div className="resolve-input-group">
+              <label className="resolve-label">Evidence / Attachment (Optional)</label>
+              <input
+                type="file"
+                className="resolve-input"
+                style={{ padding: '8px' }}
+                onChange={(e) => setFormData({ ...formData, attachment: e.target.files[0] })}
+                accept="image/*,.pdf,.doc,.docx"
               />
             </div>
 

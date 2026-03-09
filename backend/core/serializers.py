@@ -4,7 +4,8 @@ from .models import (
     Department,
     DepartmentWork,
     Employee,
-    Organisation
+    Organisation,
+    ComplaintUpdate
 )
 
 
@@ -87,8 +88,26 @@ class ComplaintCreateSerializer(serializers.ModelSerializer):
             "department",
             "description",
             "severity",
+            "attachment",
         ]
 
+
+# =========================================================
+# COMPLAINT UPDATES
+# =========================================================
+
+class ComplaintUpdateSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ComplaintUpdate
+        fields = ["id", "author", "message", "is_public", "created_at"]
+        read_only_fields = fields
+        
+    def get_author(self, obj):
+        if obj.author:
+            return obj.author.first_name or obj.author.username
+        return "System"
 
 # =========================================================
 # COMPLAINT – DETAIL / READ
@@ -97,6 +116,7 @@ class ComplaintCreateSerializer(serializers.ModelSerializer):
 class ComplaintDetailSerializer(serializers.ModelSerializer):
     organisation = serializers.CharField(source="organisation.name", read_only=True)
     department = serializers.CharField(source="department.name", read_only=True)
+    updates = ComplaintUpdateSerializer(many=True, read_only=True)
 
     class Meta:
         model = Complaint
@@ -107,9 +127,12 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
             "description",
             "severity",
             "status",
+            "attachment",
+            "deadline",
             "ai_summary",      # safe if exists
             "created_at",
             "closed_at",
+            "updates",
         ]
         read_only_fields = fields
 
@@ -120,6 +143,7 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
 
 class ComplaintTrackSerializer(serializers.ModelSerializer):
     organisation = serializers.CharField(source="organisation.name", read_only=True)
+    public_updates = serializers.SerializerMethodField()
 
     class Meta:
         model = Complaint
@@ -129,10 +153,17 @@ class ComplaintTrackSerializer(serializers.ModelSerializer):
             "status",
             "severity",
             "description",
+            "attachment",
+            "deadline",
             "created_at",
             "closed_at",
+            "public_updates"
         ]
         read_only_fields = fields
+        
+    def get_public_updates(self, obj):
+        updates = obj.updates.filter(is_public=True).order_by('created_at')
+        return ComplaintUpdateSerializer(updates, many=True).data
 
 
 # =========================================================

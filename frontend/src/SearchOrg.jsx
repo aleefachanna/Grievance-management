@@ -13,7 +13,7 @@ const OrganisationList = () => {
   useEffect(() => {
     const fetchAllOrgs = async () => {
       try {
-        const response = await api.get('/organisations/search/?q='); 
+        const response = await api.get('/organisations/search/?q=');
         // Note: You might need a separate 'list' endpoint if search requires 'q'
         setOrganisations(response.data.results);
         setFilteredOrgs(response.data.results);
@@ -40,13 +40,13 @@ const OrganisationList = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-      <h1>Organisations</h1>
-      
+    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
+      <h1 style={{ color: '#2c3e50', marginBottom: '20px' }}>Browse Organizations</h1>
+
       <div style={{ marginBottom: '20px' }}>
         <input
           type="text"
-          placeholder="Search by name or city..."
+          placeholder="Search by organization name or city..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{
@@ -65,7 +65,7 @@ const OrganisationList = () => {
         <div style={{ display: 'grid', gap: '15px' }}>
           {filteredOrgs.length > 0 ? (
             filteredOrgs.map((org) => (
-              <div 
+              <div
                 key={org.slug}
                 onClick={() => handleSelect(org.slug)}
                 style={{

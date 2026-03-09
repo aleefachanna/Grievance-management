@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { pApi } from './api';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import './style2.css';
 
 function ManagerDash() {
@@ -8,7 +9,7 @@ function ManagerDash() {
     const [employees, setEmployees] = useState([]);
 
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("complaints");
+    const [activeTab, setActiveTab] = useState("analytics");
 
     // Form states
     const [newDeptName, setNewDeptName] = useState("");
@@ -100,6 +101,7 @@ function ManagerDash() {
             <aside className="sidebar">
                 <h2>{data.organisation}</h2>
                 <nav>
+                    <button className={activeTab === 'analytics' ? 'active' : ''} onClick={() => setActiveTab('analytics')}>Analytics</button>
                     <button className={activeTab === 'complaints' ? 'active' : ''} onClick={() => setActiveTab('complaints')}>Complaints</button>
                     <button className={activeTab === 'departments' ? 'active' : ''} onClick={() => setActiveTab('departments')}>Departments</button>
                     <button className={activeTab === 'employees' ? 'active' : ''} onClick={() => setActiveTab('employees')}>Employees</button>
@@ -118,6 +120,62 @@ function ManagerDash() {
                 </header>
 
                 <div className="content-card">
+                    {activeTab === "analytics" && (
+                        <section>
+                            <h3>Organisation Analytics</h3>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px', marginTop: '20px' }}>
+                                {/* Status Pie Chart */}
+                                <div style={{ flex: '1 1 300px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
+                                    <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Status</h4>
+                                    <div style={{ height: '300px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={[
+                                                        { name: 'CLOSED', value: data.complaints.filter(c => c.status === 'CLOSED').length },
+                                                        { name: 'WORKING', value: data.complaints.filter(c => c.status === 'WORKING').length },
+                                                        { name: 'PENDING', value: data.complaints.filter(c => c.status === 'PENDING').length },
+                                                        { name: 'REVIEW', value: data.complaints.filter(c => c.status === 'REQUESTED_CLOSE').length }
+                                                    ].filter(d => d.value > 0)}
+                                                    cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value"
+                                                >
+                                                    <Cell key="CLOSED" fill="#27ae60" />
+                                                    <Cell key="WORKING" fill="#f39c12" />
+                                                    <Cell key="PENDING" fill="#e74c3c" />
+                                                    <Cell key="REVIEW" fill="#9b59b6" />
+                                                </Pie>
+                                                <Tooltip />
+                                                <Legend />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* Department Bar Chart */}
+                                <div style={{ flex: '2 1 400px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
+                                    <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Department</h4>
+                                    <div style={{ height: '300px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart
+                                                data={departments.map(d => ({
+                                                    name: d.name.substring(0, 15) + (d.name.length > 15 ? '...' : ''),
+                                                    total: data.complaints.filter(c => c.department === d.name).length
+                                                })).filter(d => d.total > 0)}
+                                                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                                                <YAxis allowDecimals={false} />
+                                                <Tooltip cursor={{ fill: '#f8f9fa' }} />
+                                                <Bar dataKey="total" fill="#3498db" radius={[4, 4, 0, 0]} barSize={40} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     {activeTab === "complaints" && (
                         <section>
                             <h3>Organisation Complaints</h3>

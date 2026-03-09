@@ -14,6 +14,12 @@ function DepDashboard() {
   const [newWork, setNewWork] = useState({ title: "", description: "", complaint_id: "", assigned_employees: [] });
   const [submittingWork, setSubmittingWork] = useState(false);
 
+  // Note Modal states
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [newNote, setNewNote] = useState("");
+  const [noteIsPublic, setNoteIsPublic] = useState(false);
+  const [postingNote, setPostingNote] = useState(false);
+
   useEffect(() => { loadAllData(); }, []);
 
   const loadAllData = async () => {
@@ -24,6 +30,12 @@ function DepDashboard() {
         pApi.get("/department/works/"),
       ]);
       setData({ dashboard: dash.data, complaints: comp.data, works: work.data });
+
+      if (selectedComplaint) {
+        const updatedComp = comp.data.find(c => c.complaint_id === selectedComplaint.complaint_id);
+        if (updatedComp) setSelectedComplaint(updatedComp);
+      }
+
       setLoading(false);
     } catch (err) { console.error(err); }
   };
@@ -83,6 +95,26 @@ function DepDashboard() {
         return { ...prev, assigned_employees: [...prev.assigned_employees, empId] };
       }
     });
+  };
+
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    setPostingNote(true);
+    try {
+      // Use internal ID if exists, fallback to complaint_id
+      const actualId = selectedComplaint.id || selectedComplaint.complaint_id;
+      await pApi.post(`/department/complaints/${actualId}/add_update/`, {
+        message: newNote,
+        is_public: noteIsPublic
+      });
+      setNewNote("");
+      setNoteIsPublic(false);
+      loadAllData();
+    } catch (err) {
+      alert("Failed to add note");
+    } finally {
+      setPostingNote(false);
+    }
   };
 
   if (loading) return <div className="loader">Loading Department Assets...</div>;
@@ -179,6 +211,61 @@ function DepDashboard() {
           </div>
         )}
 
+        {/* Notes & Detail Modal */}
+        {selectedComplaint && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          }}>
+            <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', width: '600px', maxWidth: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h3 style={{ margin: '0 0 10px 0' }}>Complaint: {selectedComplaint.complaint_id}</h3>
+                <button onClick={() => setSelectedComplaint(null)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>×</button>
+              </div>
+
+              <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px' }}>
+                <p style={{ margin: '0 0 10px 0' }}>{selectedComplaint.description}</p>
+                {selectedComplaint.attachment && (
+                  <a href={selectedComplaint.attachment} target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#3498db', color: 'white', padding: '4px 8px', borderRadius: '4px', textDecoration: 'none', fontSize: '12px' }}>
+                    📎 View Attachment
+                  </a>
+                )}
+              </div>
+
+              <h4 style={{ margin: '0 0 10px 0', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Communication Log</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                {selectedComplaint.updates && selectedComplaint.updates.length > 0 ? (
+                  selectedComplaint.updates.map(u => (
+                    <div key={u.id} style={{ background: u.is_public ? '#e8f4fd' : '#fef9e7', padding: '10px', borderRadius: '6px', border: '1px solid #eee' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#7f8c8d', marginBottom: '4px' }}>
+                        <span><strong>{u.author}</strong> {u.is_public ? '(Public)' : '(Internal)'}</span>
+                        <span>{new Date(u.created_at).toLocaleString()}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#2c3e50' }}>{u.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <span style={{ fontSize: '13px', color: '#95a5a6' }}>No updates logged yet.</span>
+                )}
+              </div>
+
+              <h4 style={{ margin: '0 0 10px 0' }}>Add Note</h4>
+              <form onSubmit={handleAddNote}>
+                <textarea required value={newNote} onChange={e => setNewNote(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '60px', marginBottom: '10px' }} placeholder="Type an update or internal note..." />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={noteIsPublic} onChange={e => setNoteIsPublic(e.target.checked)} />
+                    Make visible to Public Timeline
+                  </label>
+                  <button type="submit" disabled={postingNote} style={{ padding: '6px 16px', border: 'none', background: '#27ae60', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+                    {postingNote ? 'Saving...' : 'Post Update'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         <div className="content-card">
           {activeTab === "works" && (
             <section>
@@ -213,27 +300,40 @@ function DepDashboard() {
             <section>
               <h3>Public Complaints</h3>
               <div className="complaint-grid">
-                {complaints.map(c => (
-                  <div key={c.id} className="complaint-box">
-                    <p>{c.description}</p>
-                    <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px' }}>
-                      <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
+                {complaints.map(c => {
+                  const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
+                  return (
+                    <div key={c.id || c.complaint_id} className="complaint-box" style={{ position: 'relative', border: isOverdue ? '1px solid #e74c3c' : '1px solid #e1e4e8' }}>
+                      {isOverdue && (
+                        <span style={{ position: 'absolute', top: '-10px', right: '10px', background: '#e74c3c', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>OVERDUE</span>
+                      )}
+                      <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50', display: 'flex', justifyContent: 'space-between' }}>
+                        ID: {c.complaint_id}
+                        {c.deadline && <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'normal' }}>Due: {new Date(c.deadline).toLocaleDateString()}</span>}
+                      </h5>
+                      <p style={{ marginBottom: '15px' }}>{c.description.substring(0, 100)}{c.description.length > 100 ? '...' : ''}</p>
+                      <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px' }}>
+                        <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
+                        <button onClick={() => setSelectedComplaint(c)} style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                          Notes & Details
+                        </button>
 
-                      <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
-                        {c.status === "PENDING" && !dashboard.is_hod && (
-                          <button onClick={() => handleUpdateComplaint(c.id, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                            Start Working
-                          </button>
-                        )}
-                        {c.status !== "CLOSED" && (
-                          <button onClick={() => handleUpdateComplaint(c.id, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                            {dashboard.is_hod ? "Close Issue" : "Request Close"}
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
+                          {c.status === "PENDING" && !dashboard.is_hod && (
+                            <button onClick={() => handleUpdateComplaint(c.id || c.complaint_id, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                              Start Working
+                            </button>
+                          )}
+                          {c.status !== "CLOSED" && (
+                            <button onClick={() => handleUpdateComplaint(c.id || c.complaint_id, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                              {dashboard.is_hod ? "Close Issue" : "Request Close"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </section>
           )}

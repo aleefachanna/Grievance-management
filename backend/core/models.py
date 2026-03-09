@@ -205,6 +205,9 @@ class Complaint(models.Model):
     severity = models.CharField(max_length=1, choices=SEVERITY_CHOICES, default='0')
     ai_summary = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    
+    attachment = models.FileField(upload_to='complaints/', null=True, blank=True)
+    deadline = models.DateTimeField(null=True, blank=True)
 
     works = models.ManyToManyField(
         DepartmentWork,
@@ -237,3 +240,15 @@ class Complaint(models.Model):
 
     def __str__(self):
         return f"{self.complaint_id} | {self.organisation.name}"
+
+# ----------------- COMPLAINT UPDATE (MESSAGING) -----------------
+class ComplaintUpdate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name="updates")
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    message = models.TextField()
+    is_public = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Update on {self.complaint.complaint_id}"
