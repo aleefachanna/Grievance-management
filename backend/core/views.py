@@ -17,7 +17,9 @@ from rest_framework.response import Response
 from .serializers import ComplaintTrackSerializer
 from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view
-
+from django.utils import timezone
+from django.db.models import Count
+from django.http import JsonResponse
 @api_view(['POST'])
 def manager_login(request):
     manager_id = request.data.get("manager_id")
@@ -243,10 +245,91 @@ class ManagerDashboardView(APIView):
         if action == "reassign_complaint":
             complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
             department = Department.objects.get(id=request.data.get("department_id"))
-
+            cid = request.data.get("complaint_id") # Define this
+            new_status = request.data.get("status")
             complaint.departments.set([department])
             complaint.save()
 
             return Response({"message": "Complaint reassigned"})
 
-        return Response({"error": "Invalid action"}, status=400)
+        if not cid or not new_status:
+            return
+
+        try:
+            complaint = Complaint.objects.get(id=cid)
+        except Complaint.DoesNotExist:
+            return
+
+        if department not in complaint.departments.all():
+            return
+
+        complaint.status = new_status
+
+        if new_status == "CLOSED":
+            complaint.closed_at = timezone.now()
+        else:
+            complaint.closed_at = None
+
+        complaint.save()
+
+
+def handle_create_work(request, department):
+    title = request.POST.get("title")
+    desc = request.POST.get("desc")
+
+    if not title:
+        return
+
+    DepartmentWork.objects.create(
+        department=department,
+        title=title,
+        description=desc or ""
+    )
+
+
+def handle_assign_work(request, department):
+    cid = request.POST.get("complaint_id")
+    wid = request.POST.get("work_id")
+
+    if not cid or not wid:
+        return
+
+    try:
+        complaint = Complaint.objects.get(id=cid)
+        work = DepartmentWork.objects.get(id=wid, department=department)
+    except (Complaint.DoesNotExist, DepartmentWork.DoesNotExist):
+        return
+
+    if department in complaint.departments.all():
+        complaint.works.add(work)
+def organisation_stats_api(request, cin):
+    try:
+        # 1. Identify the organization using the CIN from your model
+        org = Organisation.objects.get(cin=cin)
+        
+        # 2. Get the count of complaints for this org
+        complaints = Complaint.objects.filter(organisation=org)
+        
+        # 3. Calculate breakdown for the Pie Chart
+        # This groups by status and counts them in one database query
+        status_counts = complaints.values('status').annotate(total=Count('status'))
+        
+        # 4. Initialize our response object
+        stats_data = {
+            "total": complaints.count(),
+            "pending": 0,
+            "in_progress": 0,
+            "resolved": 0,
+            "rejected": 0
+        }
+
+        # 5. Map DB results to our JSON keys
+        for item in status_counts:
+            status = item['status'].lower().replace(" ", "_")
+            if status in stats_data:
+                stats_data[status] = item['total']
+
+        return JsonResponse(stats_data)
+
+    except Organisation.DoesNotExist:
+        return JsonResponse({"error": "Organisation not found"}, status=404)

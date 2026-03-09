@@ -9,6 +9,7 @@ import ManagerLogin from "./ManagerLogin";//
 import CreateOrg from "./CreateOrg";//
 import DepDashBoard from "./DepDashboard";//
 import ManagerDash from "./ManagerDash";
+import OrgDash from "./pages/dashboard";//temporary only 
 function App() {
   return (
     <BrowserRouter>
@@ -23,7 +24,7 @@ function App() {
         <Route path="/create-org" element={<CreateOrg />} />
         <Route path="/depdashboard" element={<DepDashBoard />} />
         <Route path="/managerdashboard" element={<ManagerDash />} />
-
+        <Route path="/organisation" element={<OrgDash />} />{/*temporary only*/}
       </Routes>
     </BrowserRouter>
   );
