@@ -65,6 +65,7 @@ class Employee(models.Model):
     employee_id = models.CharField(max_length=20)
     is_first_login = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
 
     user = models.OneToOneField(
         User,
@@ -252,3 +253,17 @@ class ComplaintUpdate(models.Model):
 
     def __str__(self):
         return f"Update on {self.complaint.complaint_id}"
+
+# ----------------- OTP VERIFICATION -----------------
+class OTPVerification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(unique=True)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        # Valid for 10 minutes
+        return timezone.now() < self.created_at + timezone.timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.email} - {self.otp}"

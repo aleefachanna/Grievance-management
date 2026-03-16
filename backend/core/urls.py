@@ -15,6 +15,7 @@ from .views import (
     SubmitComplaintView,
     ManagerDashboardView,
     CreateOrganisationView,
+    SendOTPView,
     DepartmentManagerView,
     EmployeeManagerView,
 )
@@ -48,6 +49,7 @@ urlpatterns = [
     # ---------------- Manager Dashboard ----------------
     path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
     path('organisation/create/', CreateOrganisationView.as_view(), name='create_organisation'),
+    path('organisation/send-otp/', SendOTPView.as_view(), name='send_otp'),
     path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
     path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
 ]

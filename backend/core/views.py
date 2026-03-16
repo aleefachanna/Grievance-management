@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from django.utils.text import slugify
-from .models import Complaint, Department, DepartmentWork, Employee, Manager, Organisation
+from .models import Complaint, Department, DepartmentWork, Employee, Manager, Organisation, OTPVerification
 from .serializers import (
     ComplaintDetailSerializer,
     ComplaintCreateSerializer,
@@ -300,6 +300,38 @@ class ManagerDashboardView(APIView):
         return Response({"error": "Invalid action"}, status=400)
 
 
+class SendOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=400)
+            
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "User with this email already exists"}, status=400)
+
+        # Generate 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # Save or update OTP record
+        otp_record, created = OTPVerification.objects.update_or_create(
+            email=email,
+            defaults={'otp': otp, 'created_at': timezone.now()}
+        )
+        
+        # Send Email
+        try:
+            send_email(
+                subject="Your ResolvePro Organisation Creation OTP",
+                body=f"Your OTP for creating an organisation on ResolvePro is: {otp}. It is valid for 10 minutes.",
+                to_email=email
+            )
+        except Exception as e:
+            return Response({"error": "Failed to send email. Please try again later."}, status=500)
+            
+        return Response({"message": "OTP sent successfully"}, status=200)
+
 class CreateOrganisationView(APIView):
     permission_classes = [AllowAny]
 
@@ -307,6 +339,21 @@ class CreateOrganisationView(APIView):
     def post(self, request):
         data = request.data
         
+        # OTP Validation
+        email = data.get("adminEmail")
+        submitted_otp = data.get("otp")
+        
+        if not email or not submitted_otp:
+            return Response({"error": "Admin email and OTP are required"}, status=400)
+            
+        try:
+            otp_record = OTPVerification.objects.get(email=email, otp=submitted_otp)
+            if not otp_record.is_valid():
+                return Response({"error": "OTP has expired. Please request a new one."}, status=400)
+        except OTPVerification.DoesNotExist:
+            return Response({"error": "Invalid OTP. Please check your spelling and try again."}, status=400)
+        
+        # Validated. Continue with Creation
         name = data.get("orgName")
         slug = slugify(name)
         base_slug = slug
@@ -341,6 +388,9 @@ class CreateOrganisationView(APIView):
             organisation=org,
             is_owner=True
         )
+        
+        # Clean up OTP record post-success
+        otp_record.delete()
         
         return Response({
             "message": "Organisation created successfully",
