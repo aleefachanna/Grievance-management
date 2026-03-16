@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 /* ============================================================
    CreateOrg.css – Professional Multi-Step Wizard
    ============================================================ */
@@ -10,12 +11,31 @@
 
 /* ── Background ── */
 .co-wrapper {
+=======
+/* CreateOrg.css - Updated to Modern Dark SaaS Theme */
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #13131f;
+  --accent-primary: #6366f1;
+  --accent-secondary: #a855f7;
+  --accent-glow: rgba(99, 102, 241, 0.4);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-bg: rgba(19, 19, 31, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+.wrapper {
+  background-color: var(--bg-primary);
+>>>>>>> Stashed changes
   min-height: 100vh;
   width: 100vw;
   background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
+<<<<<<< Updated upstream
   justify-content: flex-start;
   padding: 40px 20px 60px;
   font-family: 'Inter', sans-serif;
@@ -41,6 +61,88 @@
   color: rgba(255, 255, 255, 0.4);
   font-size: 13px;
   margin-top: 4px;
+=======
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  color: var(--text-main);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background glows */
+.wrapper::before,
+.wrapper::after {
+  content: '';
+  position: absolute;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.3;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wrapper::before {
+  top: 10%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+}
+
+.wrapper::after {
+  bottom: 10%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
+}
+
+.card {
+  position: relative;
+  z-index: 10;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+}
+
+.brand-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.brand-title {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  font-size: 2rem;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.form-title {
+  color: var(--text-main);
+  text-align: center;
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  font-size: 15px;
+>>>>>>> Stashed changes
 }
 
 /* ── Progress Bar ── */
@@ -196,11 +298,77 @@
   margin-bottom: 20px;
 }
 
+<<<<<<< Updated upstream
 .co-label {
   font-size: 12px;
   font-weight: 600;
   color: rgba(255,255,255,0.55);
   margin-bottom: 8px;
+=======
+.form-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.form-input, .form-textarea {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-input:focus, .form-textarea:focus {
+  border-color: var(--accent-primary);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.submit-button {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 30px;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-glow);
+}
+
+.section-divider {
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 16px;
+  margin: 30px 0 20px 0;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 10px;
+>>>>>>> Stashed changes
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -274,14 +442,25 @@
 /* ── Checkboxes ── */
 .co-checkbox-grid {
   display: grid;
+<<<<<<< Updated upstream
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
   margin-top: 4px;
+=======
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+  padding: 20px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+>>>>>>> Stashed changes
 }
 
 .co-checkbox-item {
   display: flex;
   align-items: center;
+<<<<<<< Updated upstream
   gap: 10px;
   background: rgba(255,255,255,0.04);
   border: 1.5px solid rgba(255,255,255,0.08);
@@ -526,6 +705,11 @@
   background: none;
   border: none;
   color: #a78bfa;
+=======
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-main);
+>>>>>>> Stashed changes
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -533,6 +717,7 @@
   margin-left: 4px;
 }
 
+<<<<<<< Updated upstream
 .co-resend button:hover {
   text-decoration: underline;
 }
@@ -586,5 +771,24 @@
   }
   .co-step-label {
     display: none;
+=======
+.checkbox-item:hover {
+  color: var(--accent-primary);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .form-group {
+    min-width: 100%;
+>>>>>>> Stashed changes
+  }
+  .card {
+    padding: 24px;
   }
 }
