@@ -23,6 +23,10 @@ class Organisation(models.Model):
     description = models.TextField(blank=True)
     organisation_type = models.CharField(max_length=20, choices=ORGANISATION_TYPE_CHOICES)
     official_email = models.EmailField()
+    phone = models.CharField(max_length=30, blank=True)
+    website = models.URLField(blank=True)
+    cin = models.CharField(max_length=50, blank=True)
+    gstin = models.CharField(max_length=20, blank=True)
 
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)

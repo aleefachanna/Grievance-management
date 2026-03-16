@@ -7,8 +7,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 import secrets
+import random
 from datetime import timedelta
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -225,20 +225,39 @@ class SubmitComplaintView(APIView):
             complaint.deadline = timezone.now() + timedelta(days=30)
             complaint.save()
 
-        email_body = f"""
-Hello,
+        severity_labels = {'0': 'None', '1': 'Very Low', '2': 'Low', '3': 'Medium', '4': 'High', '5': 'Critical'}
+        severity_label = severity_labels.get(complaint.severity, complaint.severity)
+        deadline_str = complaint.deadline.strftime('%d %b %Y, %I:%M %p UTC') if complaint.deadline else 'Not assigned'
+        dept_name = complaint.department.name if complaint.department else 'Being assigned'
 
-Your complaint has been registered successfully.
+        email_body = f"""Hello,
 
-Complaint ID: {complaint.complaint_id}
-Organisation: {organisation.name}
-Severity Level: {complaint.severity}
+Thank you for reaching out. Your complaint has been successfully registered with {organisation.name}.
 
-We will review your complaint shortly.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  COMPLAINT DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Complaint ID  : {complaint.complaint_id}
+  Organisation  : {organisation.name}
+  Department    : {dept_name}
+  Severity      : {severity_label}
+  SLA Deadline  : {deadline_str}
+  Status        : Pending Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You can track the status of your complaint using the Complaint ID above at any time.
+
+Our team will review your complaint and update you as it progresses.
+
+Regards,
+ResolvePro – Grievance Management Platform
 """
 
         if email:
-            send_email("Complaint Registered Successfully", email_body, email)
+            try:
+                send_email("Complaint Registered – " + complaint.complaint_id, email_body, email)
+            except Exception:
+                pass  # Don't fail the request if email sending fails
 
         return Response({
             "message": "Complaint submitted successfully",
@@ -338,60 +357,73 @@ class CreateOrganisationView(APIView):
     @transaction.atomic
     def post(self, request):
         data = request.data
-        
+
         # OTP Validation
         email = data.get("adminEmail")
         submitted_otp = data.get("otp")
-        
+
         if not email or not submitted_otp:
             return Response({"error": "Admin email and OTP are required"}, status=400)
-            
+
         try:
             otp_record = OTPVerification.objects.get(email=email, otp=submitted_otp)
             if not otp_record.is_valid():
                 return Response({"error": "OTP has expired. Please request a new one."}, status=400)
         except OTPVerification.DoesNotExist:
-            return Response({"error": "Invalid OTP. Please check your spelling and try again."}, status=400)
-        
-        # Validated. Continue with Creation
+            return Response({"error": "Invalid OTP. Please check and try again."}, status=400)
+
+        # Validated — create organisation
         name = data.get("orgName")
+        if not name:
+            return Response({"error": "Organisation name is required"}, status=400)
+
         slug = slugify(name)
         base_slug = slug
         counter = 1
         while Organisation.objects.filter(slug=slug).exists():
             slug = f"{base_slug}-{counter}"
             counter += 1
-            
+
         org = Organisation.objects.create(
             name=name,
             slug=slug,
-            organisation_type="private",
-            official_email=data.get("email"),
-            city=data.get("city"),
-            state=data.get("state"),
-            country=data.get("country"),
-            description=data.get("address", "")
+            organisation_type=data.get("orgType", "private"),
+            official_email=data.get("email", ""),
+            phone=data.get("phone", ""),
+            website=data.get("website", ""),
+            cin=data.get("cin", ""),
+            gstin=data.get("gstin", ""),
+            city=data.get("city", ""),
+            state=data.get("state", ""),
+            country=data.get("country", ""),
+            description=data.get("description", ""),
         )
-        
+
+        # Handle logo file upload
+        logo = request.FILES.get("logo")
+        if logo:
+            org.logo = logo
+            org.save()
+
         admin_email = data.get("adminEmail")
-        temp_password = secrets.token_urlsafe(8)
-        
+        temp_password = secrets.token_urlsafe(10)
+
         user = User.objects.create(
             username=admin_email,
             email=admin_email,
             password=make_password(temp_password),
             first_name=data.get("adminName", "")
         )
-        
-        manager = Manager.objects.create(
+
+        Manager.objects.create(
             user=user,
             organisation=org,
             is_owner=True
         )
-        
-        # Clean up OTP record post-success
+
+        # Clean up OTP record
         otp_record.delete()
-        
+
         return Response({
             "message": "Organisation created successfully",
             "manager_email": admin_email,

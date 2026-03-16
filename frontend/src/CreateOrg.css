@@ -1,174 +1,590 @@
-/* CreateOrg.css */
+/* ============================================================
+   CreateOrg.css – Professional Multi-Step Wizard
+   ============================================================ */
 
-.wrapper {
-  background-color: #FFF3B8;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Background ── */
+.co-wrapper {
   min-height: 100vh;
   width: 100vw;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px;
-  box-sizing: border-box;
+  justify-content: flex-start;
+  padding: 40px 20px 60px;
+  font-family: 'Inter', sans-serif;
 }
 
-.card {
-  background-color: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 800px;
-  box-sizing: border-box;
-  border-top: 8px solid #859E75;
-}
-
-.brand-header {
+/* ── Brand Header ── */
+.co-brand {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 32px;
 }
 
-.brand-title {
-  color: #859E75;
-  margin: 0;
-}
-
-.form-title {
-  color: #B76B5C;
-  text-align: center;
-  margin: 0 0 10px 0;
+.co-brand-logo {
   font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
-.subtitle {
-  text-align: center;
-  color: #666;
-  margin-bottom: 30px;
-  font-size: 15px;
+.co-brand-tagline {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  margin-top: 4px;
 }
 
-.form-row {
+/* ── Progress Bar ── */
+.co-progress {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 32px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.co-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.co-step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.35);
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+.co-step-circle.active {
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+}
+
+.co-step-circle.done {
+  background: #10b981;
+  border-color: transparent;
+  color: white;
+}
+
+.co-step-label {
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 6px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.co-step-label.active {
+  color: #a78bfa;
+}
+
+.co-step-label.done {
+  color: #10b981;
+}
+
+.co-step-line {
+  height: 2px;
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  margin-top: -26px;
+  transition: background 0.4s ease;
+}
+
+.co-step-line.done {
+  background: #10b981;
+}
+
+/* ── Card ── */
+.co-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 680px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
+  animation: coFadeIn 0.4s ease;
+}
+
+@keyframes coFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Step Header ── */
+.co-step-header {
+  margin-bottom: 32px;
+}
+
+.co-step-tag {
+  display: inline-block;
+  background: linear-gradient(90deg, rgba(167,139,250,0.2), rgba(96,165,250,0.2));
+  border: 1px solid rgba(167,139,250,0.3);
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 12px;
+}
+
+.co-step-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.co-step-subtitle {
+  color: rgba(255,255,255,0.45);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Form Elements ── */
+.co-form-row {
+  display: flex;
+  gap: 16px;
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-.form-group {
+.co-form-group {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-width: 250px;
+  min-width: 200px;
 }
 
-.form-group-full {
+.co-form-group-full {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   margin-bottom: 20px;
 }
 
-.form-label {
+.co-label {
+  font-size: 12px;
   font-weight: 600;
+  color: rgba(255,255,255,0.55);
   margin-bottom: 8px;
-  font-size: 14px;
-  color: #333;
-}
-
-.form-input {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1.5px solid #859E75;
-  background-color: #ffffff;
-  color: #000;
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.submit-button {
-  background-color: #B76B5C;
-  color: white;
-  padding: 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 20px;
-  width: 100%;
-  transition: 0.3s;
-}
-
-.submit-button:hover {
-  background-color: #a35a4d;
-}
-/* ... existing styles ... */
-
-/* Add these to your existing CreateOrg.css */
-
-.form-textarea {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1.5px solid #859E75;
-  background-color: #ffffff;
-  color: #000;
-  font-size: 14px;
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 80px;
-  resize: vertical;
-  font-family: inherit;
-}
-
-.section-divider {
-  color: #859E75;
-  font-weight: bold;
-  font-size: 16px;
-  margin: 25px 0 15px 0;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.6px;
 }
 
-/* Checkbox Grid Styles */
-.checkbox-grid {
+.co-input,
+.co-textarea,
+.co-select {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  padding: 13px 16px;
+  outline: none;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  width: 100%;
+}
+
+.co-input::placeholder,
+.co-textarea::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.co-input:focus,
+.co-textarea:focus,
+.co-select:focus {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+}
+
+.co-input.error {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248,113,113,0.15);
+}
+
+.co-textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.co-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a78bfa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+.co-select option {
+  background: #1a1a3e;
+  color: white;
+}
+
+/* ── Section Divider ── */
+.co-section-divider {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(167,139,250,0.7);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(167,139,250,0.15);
+  margin: 28px 0 20px;
+}
+
+/* ── Checkboxes ── */
+.co-checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
-  background-color: #fcfcfc;
-  padding: 15px;
-  border: 1.5px solid #859E75;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
 }
 
-.checkbox-item {
+.co-checkbox-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.co-checkbox-item:hover {
+  border-color: rgba(167,139,250,0.4);
+  background: rgba(167,139,250,0.08);
+  color: #fff;
+}
+
+.co-checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #a78bfa;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── OTP Input ── */
+.co-otp-wrapper {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+.co-otp-digit {
+  width: 56px;
+  height: 64px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.co-otp-digit:focus {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.1);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.2);
+}
+
+/* ── Logo Upload ── */
+.co-logo-upload {
+  border: 2px dashed rgba(167,139,250,0.3);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(167,139,250,0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.co-logo-upload:hover {
+  border-color: rgba(167,139,250,0.6);
+  background: rgba(167,139,250,0.07);
+}
+
+.co-logo-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.co-logo-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(167,139,250,0.5);
+  margin: 0 auto 12px;
+  display: block;
+}
+
+.co-logo-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.co-logo-text {
+  color: rgba(255,255,255,0.45);
+  font-size: 13px;
+}
+
+.co-logo-text strong {
+  color: #a78bfa;
+}
+
+/* ── Buttons ── */
+.co-btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.co-btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.co-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(167,139,250,0.35);
+}
+
+.co-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.co-btn-secondary {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.65);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 15px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.co-btn-secondary:hover {
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+/* ── Error ── */
+.co-error {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 13px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Success Screen ── */
+.co-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 24px;
+  box-shadow: 0 0 40px rgba(16,185,129,0.4);
+}
+
+.co-cred-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 24px;
+  margin: 20px 0;
+}
+
+.co-cred-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   font-size: 14px;
-  color: #444;
+}
+
+.co-cred-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.co-cred-label {
+  color: rgba(255,255,255,0.45);
+  font-weight: 500;
+}
+
+.co-cred-value {
+  color: #a78bfa;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: rgba(167,139,250,0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.co-warning-box {
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 10px;
+  color: #fbbf24;
+  font-size: 13px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ── Email Resend ── */
+.co-resend {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+}
+
+.co-resend button {
+  background: none;
+  border: none;
+  color: #a78bfa;
   cursor: pointer;
-  transition: 0.2s;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+  margin-left: 4px;
 }
 
-.checkbox-item:hover {
-  color: #B76B5C;
+.co-resend button:hover {
+  text-decoration: underline;
 }
 
-.checkbox-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #859E75; /* This styles the checkmark green */
-  cursor: pointer;
+/* ── Review Panel ── */
+.co-review-grid {
+  display: grid;
+  gap: 12px;
 }
 
-/* ... keep existing styles for wrapper, card, etc. ... */
-/* Responsive adjustment for small screens */
-@media (max-width: 600px) {
-  .form-group {
-    min-width: 100%;
+.co-review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+
+.co-review-key {
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.co-review-val {
+  color: #ffffff;
+  font-weight: 500;
+  text-align: right;
+  max-width: 55%;
+  word-break: break-word;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .co-card {
+    padding: 32px 22px;
+    border-radius: 18px;
+  }
+  .co-otp-digit {
+    width: 44px;
+    height: 52px;
+    font-size: 20px;
+  }
+  .co-btn-row {
+    flex-direction: column-reverse;
+  }
+  .co-step-label {
+    display: none;
   }
 }
