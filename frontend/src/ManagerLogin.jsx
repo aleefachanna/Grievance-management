@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./style.css";
 
 function ManagerLogin() {
-  const [orgId, setOrgId] = useState("");
-  const [managerId, setManagerId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
@@ -19,6 +18,12 @@ function ManagerLogin() {
       });
 
       localStorage.setItem("token", response.data.token);
+      const response = await axios.post("http://127.0.0.1:8000/api/manager/login/", {
+        email: email,
+        password: password,
+      });
+      localStorage.setItem("access", response.data.access);
+      localStorage.setItem("refresh", response.data.refresh);
       localStorage.setItem("role", "manager");
 
       navigate("/managerdashboard");
@@ -56,25 +61,13 @@ function ManagerLogin() {
 
         <form onSubmit={handleLogin}>
           <div className="resolve-input-group">
-            <label className="resolve-label">Organization ID</label>
+            <label className="resolve-label">Email</label>
             <input
-              type="text"
+              type="email"
               className="resolve-input"
-              placeholder="e.g. ORG-123"
-              value={orgId}
-              onChange={(e) => setOrgId(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="resolve-input-group">
-            <label className="resolve-label">Manager ID</label>
-            <input
-              type="text"
-              className="resolve-input"
-              placeholder="Enter your ID"
-              value={managerId}
-              onChange={(e) => setManagerId(e.target.value)}
+              placeholder="admin@organisation.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

@@ -1,38 +1,26 @@
-import axios from 'axios';
+import axios from "axios";
 
-const api = axios.create({
-    baseURL: 'http://localhost:8000/api/',
+const BASE_URL = "http://127.0.0.1:8000/api";
+
+// Use this for Login (It has NO interceptor)
+export const api = axios.create({
+  baseURL: BASE_URL,
 });
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("access_token");
+// Use this for everything else (It HAS the interceptor)
+export const pApi = axios.create({
+  baseURL: BASE_URL,
+});
+
+pApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access");
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-});
-
-// This part catches "401 Unauthorized" errors and tries to get a new token
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-            const refreshToken = localStorage.getItem('refresh_token');
-            try {
-                const res = await axios.post('http://localhost:8000/api/token/refresh/', {
-                    refresh: refreshToken,
-                });
-                localStorage.setItem('access_token', res.data.access);
-                return api(originalRequest);
-            } catch (err) {
-                localStorage.clear();
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
-    }
+  },
+  (error) => Promise.reject(error)
 );
 
-export default api;
+export default api; // This allows "import api from './api'" to work

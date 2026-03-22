@@ -14,13 +14,24 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 import os
+from datetime import timedelta
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
 load_dotenv()
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
 EMAIL_HOST_USER = 'vathidhi0@gmail.com'
 EMAIL_HOST_PASSWORD = 'pimh veen uvia wefv'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
@@ -38,7 +49,14 @@ SECRET_KEY = 'django-insecure-n12v$sv@+vug3b1n0ue71e8(rgx#x+suyp520^9$f$ba#-vbva
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
 ALLOWED_HOSTS = []
 
 MEDIA_URL = "/media/"
@@ -57,12 +75,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 ]
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,7 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",

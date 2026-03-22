@@ -5,71 +5,148 @@ import './style.css';
 const TrackComplaint = () => {
   const [complaintId, setComplaintId] = useState("");
   const navigate = useNavigate();
+  import api from './api';
+  import './style.css'; // Importing the shared CSS file
 
-  const handleTrack = (e) => {
-    e.preventDefault();
-    console.log("Tracking ID:", complaintId);
-    // Add backend fetch logic here
-  };
+  const TrackComplaint = () => {
+    const [complaintId, setComplaintId] = useState("");
+    const [complaintData, setComplaintData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-  return (
-    <div className="resolve-wrapper">
-      <div className="resolve-card">
+    const handleTrack = async (e) => {
+      e.preventDefault();
+      console.log("Tracking ID:", complaintId);
+      // Add backend fetch logic here
+      setLoading(true);
+      setError("");
+      setComplaintData(null);
+      try {
+        const response = await api.get(`/complaint/track/${complaintId}/`);
+        setComplaintData(response.data);
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          setError("Complaint not found. Please check your tracking ID.");
+        } else {
+          setError("An error occurred while fetching the complaint details.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        {/* Back to Home Button */}
-        <button 
-          onClick={() => navigate('/')}
-          className="resolve-back-icon-btn"
-          title="Back to Home"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M19 12H5M5 12L12 19M5 12L12 5" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+    return (
+      <div className="resolve-wrapper">
+        <div className="resolve-card">
 
-        <div className="resolve-logo-area">
-          <span className="resolve-logo-text">ResolvePro</span>
-        </div>
+          {/* Back to Home Button */}
+          <button
+            onClick={() => navigate('/')}
+            className="resolve-back-icon-btn"
+            title="Back to Home"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M19 12H5M5 12L12 19M5 12L12 5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
 
-        <h2 className="resolve-header">Track Your Complaint</h2>
-
-        <form onSubmit={handleTrack}>
-          <div className="resolve-input-group">
-            <label className="resolve-label">Complaint ID</label>
-            <input
-              type="text"
-              className="resolve-input"
-              placeholder="e.g. RPC-99210"
-              value={complaintId}
-              onChange={(e) => setComplaintId(e.target.value)}
-              required
-              style={{ textAlign: 'center' }}
-            />
+          <div className="resolve-logo-area">
+            <span className="resolve-logo-text">ResolvePro</span>
           </div>
 
-          <button type="submit" className="resolve-btn">
-            Track Complaint
-          </button>
-        </form>
+          <h2 className="resolve-header">Track Your Complaint</h2>
 
-        <div style={{ marginTop: '20px' }}>
-          <p style={{ color: '#666', fontSize: '14px' }}>
-            Lost your ID? 
-            <span style={{ color: '#859E75', cursor: 'pointer', fontWeight: 'bold' }}>
-              {" "}Check your email
-            </span>
-          </p>
+          <form onSubmit={handleTrack}>
+            <div className="resolve-input-group">
+              <label className="resolve-label">Complaint ID</label>
+              <input
+                type="text"
+                className="resolve-input"
+                placeholder="e.g. RPC-99210"
+                value={complaintId}
+                onChange={(e) => setComplaintId(e.target.value)}
+                required
+                style={{ textAlign: 'center' }}
+              />
+            </div>
+
+            <button type="submit" className="resolve-btn">
+              Track Complaint
+            </button>
+          </form>
+
+          <div style={{ marginTop: '20px' }}>
+            <p style={{ color: '#666', fontSize: '14px' }}>
+              Lost your ID?
+              <span style={{ color: '#859E75', cursor: 'pointer', fontWeight: 'bold' }}>
+                {" "}Check your email
+              </span>
+              <button type="submit" className="resolve-btn" disabled={loading}>
+                {loading ? "Tracking..." : "Track Complaint"}
+              </button>
+            </form>
+
+            {error && <div style={{ color: "red", marginTop: "15px", textAlign: "center" }}>{error}</div>}
+
+            {complaintData && (
+              <div style={{ marginTop: "25px", padding: "20px", background: "#f8f9fa", borderRadius: "8px", borderLeft: "4px solid #3498db" }}>
+                <h3 style={{ margin: "0 0 15px 0", color: "#2c3e50", display: 'flex', justifyContent: 'space-between' }}>
+                  Status: {complaintData.status}
+                  {complaintData.deadline && complaintData.status !== 'CLOSED' && (
+                    <span style={{ fontSize: '12px', background: new Date(complaintData.deadline) < new Date() ? '#e74c3c' : '#bdc3c7', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
+                      Due: {new Date(complaintData.deadline).toLocaleDateString()}
+                    </span>
+                  )}
+                </h3>
+                <p style={{ margin: "5px 0" }}><strong>Organisation:</strong> {complaintData.organisation}</p>
+                <p style={{ margin: "5px 0" }}><strong>Department:</strong> {complaintData.department || "Unassigned"}</p>
+                <p style={{ margin: "5px 0" }}><strong>Severity:</strong> {complaintData.severity}/5</p>
+                <hr style={{ margin: "15px 0", borderTop: "1px solid #ddd" }} />
+                <p style={{ margin: 0, color: "#555" }}>{complaintData.description}</p>
+
+                {complaintData.attachment && (
+                  <div style={{ marginTop: '15px' }}>
+                    <a href={complaintData.attachment} target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#3498db', color: 'white', padding: '6px 12px', borderRadius: '4px', textDecoration: 'none', fontSize: '13px' }}>
+                      📎 View Attachment
+                    </a>
+                  </div>
+                )}
+
+                {complaintData.public_updates && complaintData.public_updates.length > 0 && (
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+                    <h4 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>Timeline & Updates</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {complaintData.public_updates.map(update => (
+                        <div key={update.id} style={{ background: '#fff', border: '1px solid #eee', padding: '10px', borderRadius: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '11px', color: '#7f8c8d' }}>
+                            <strong>{update.author}</strong>
+                            <span>{new Date(update.created_at).toLocaleString()}</span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '13px', color: '#2c3e50' }}>{update.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            <div style={{ marginTop: '20px' }}>
+              <p style={{ color: '#666', fontSize: '14px' }}>
+                Lost your ID? <span style={{ color: '#B76B5C', cursor: 'pointer', fontWeight: 'bold' }}>Check your email</span>
+              </p>
+            </div>
+
+          </div>
         </div>
-
-      </div>
-    </div>
-  );
+        );
 };
 
-export default TrackComplaint;
+        export default TrackComplaint;

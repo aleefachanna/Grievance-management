@@ -1,16 +1,56 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
-from .views import LoginView, ManagerDashboardView, SubmitComplaintView, DepartmentDashboardView, track_complaint
+from rest_framework.routers import DefaultRouter
+from .department import (
+    LoginView,
+    AIAssignView, 
+    DepartmentAnalyzeView, 
+    DepartmentWorkViewSet,
+    DepartmentComplaintViewSet,
+    DepartmentDashboardView)
+from .views import (
+    get_organisation,
+    search_organisations,
+    manager_login,
+    track_complaint,
+    SubmitComplaintView,
+    ManagerDashboardView,
+    CreateOrganisationView,
+    SendOTPView,
+    DepartmentManagerView,
+    EmployeeManagerView,
+)
+router = DefaultRouter()
+router.register(r"department/complaints", DepartmentComplaintViewSet, basename="dept-complaints")
+router.register(r"department/works", DepartmentWorkViewSet, basename="dept-works")
 
 urlpatterns = [
-    # Auth Routes
-    path('emplogin/', LoginView.as_view(), name='api_login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # Feature Routes
-    path('submit/', SubmitComplaintView.as_view(), name='api_submit_complaint'),
-    path('department/dashboard/', DepartmentDashboardView.as_view(), name='api_dashboard'),
-    path("manager/dashboard/", ManagerDashboardView.as_view()),
-    # urls.py
-    path('track/<str:complaint_id>/', track_complaint),
+    # ---------------- Public Organisation APIs ----------------
+    path('organisation/<slug:slug>/', get_organisation, name='get_organisation'),
+    path('organisations/search/', search_organisations, name='search_organisations'),
+    # ---------------- Manager Login ----------------
+    path('manager/login/', manager_login, name='manager_login'),
+
+    # ---------------- Employee Login (JWT) ----------------
+    
+
+    # ---------------- Complaint Tracking ----------------
+    path('complaint/track/<str:complaint_id>/', track_complaint, name='track_complaint'),
+
+    # ---------------- Complaint Submission ----------------
+    path('complaint/submit/', SubmitComplaintView.as_view(), name='submit_complaint'),
+
+    # ---------------- Department Dashboard ----------------
+    path('department/login/', LoginView.as_view()),
+    path("department/dashboard/", DepartmentDashboardView.as_view()),
+    path("department/ai/assign/", AIAssignView.as_view()),
+    path("department/analyze/", DepartmentAnalyzeView.as_view()),
+
+    # ---------------- Manager Dashboard ----------------
+    path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
+    path('organisation/create/', CreateOrganisationView.as_view(), name='create_organisation'),
+    path('organisation/send-otp/', SendOTPView.as_view(), name='send_otp'),
+    path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
+    path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
 ]
+urlpatterns += router.urls

@@ -1,52 +1,226 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { QRCodeSVG } from "qrcode.react";
+import api from './api';
+import './style.css';
 
 function OrgView() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [org, setOrg] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/org/organisation/${slug}/`)
-      .then((res) => setOrg(res.data))
-      .catch((err) => console.error(err));
+    setLoading(true);
+    api
+      .get(`/organisation/${slug}/`)
+      .then((res) => {
+        setOrg(res.data);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, [slug]);
 
-  if (!org) return <div className="p-10">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="resolve-wrapper" style={{ justifyContent: 'center' }}>
+        <h2 style={{ color: '#2c3e50' }}>Loading Organisation...</h2>
+      </div>
+    );
+  }
+
+  if (!org) {
+    return (
+      <div className="resolve-wrapper" style={{ justifyContent: 'center', textAlign: 'center' }}>
+        <h2 style={{ color: '#e74c3c' }}>Organisation Not Found</h2>
+        <button onClick={() => navigate('/organisations')} className="resolve-btn" style={{ marginTop: '20px' }}>
+          Back to Search
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-10">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-        {org.logo && (
-          <img
-            src={`http://127.0.0.1:8000${org.logo}`}
-            alt="Logo"
-            className="w-32 mb-4"
-          />
-        )}
+    <div style={{ maxWidth: '1000px', margin: '40px auto', padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/organisations')}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: '#3498db',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontSize: '16px',
+          marginBottom: '20px',
+          padding: 0
+        }}
+      >
+        <span>←</span> Back to Search
+      </button>
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-3">
-          {org.name}
-        </h1>
+      {/* Organisation Profile Card */}
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        padding: '40px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+        marginBottom: '40px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <h1 style={{ fontSize: '32px', color: '#2c3e50', margin: '0 0 10px 0' }}>{org.name}</h1>
+            <span style={{
+              display: 'inline-block',
+              padding: '6px 12px',
+              background: '#e8f4fd',
+              color: '#3498db',
+              borderRadius: '20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '20px'
+            }}>
+              {org.organisation_type.toUpperCase()}
+            </span>
+            <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+              {org.description || "No description provided."}
+            </p>
+          </div>
 
-        <p className="text-gray-600 mb-4">{org.description}</p>
+          <div style={{
+            background: '#f8f9fa',
+            padding: '24px',
+            borderRadius: '12px',
+            minWidth: '250px'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#2c3e50', fontSize: '18px' }}>Contact Info</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', color: '#555' }}>
+              <div><strong>Email:</strong> {org.official_email || 'N/A'}</div>
+              <div><strong>Location:</strong> {org.city}, {org.state}, {org.country}</div>
+              {org.website && <div><strong>Website:</strong> <a href={org.website} target="_blank" rel="noreferrer" style={{ color: '#3498db', textDecoration: 'none' }}>{org.website}</a></div>}
+            </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm text-gray-700">
-          <div>
-            <strong>Type:</strong> {org.organisation_type}
-          </div>
-          <div>
-            <strong>Location:</strong> {org.city}, {org.state}, {org.country}
-          </div>
-          <div>
-            <strong>Email:</strong> {org.official_email}
-          </div>
-          <div>
-            <strong>Website:</strong> {org.website}
+            <div style={{ marginTop: '20px', textAlign: 'center', background: '#fff', padding: '15px', borderRadius: '8px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#7f8c8d' }}>Scan to view page</h4>
+              <QRCodeSVG value={window.location.href} size={150} />
+            </div>
           </div>
         </div>
+
+        {/* Statistics Dashboard */}
+        {org.stats && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#3498db' }}>{org.stats.total_complaints}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Total Complaints</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#27ae60' }}>{org.stats.resolved_complaints}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Resolved Cases</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#9b59b6' }}>{org.stats.total_employees}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Active Staff</span>
+            </div>
+            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '28px', color: '#f39c12' }}>{org.stats.total_departments}</h3>
+              <span style={{ fontSize: '14px', color: '#7f8c8d' }}>Departments</span>
+            </div>
+          </div>
+        )}
+
+        {/* Departments List */}
+        {org.departments && org.departments.length > 0 && (
+          <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '30px' }}>
+            <h3 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>Departments</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {org.departments.map(d => (
+                <span key={d.id} style={{ background: '#e8ecef', padding: '8px 15px', borderRadius: '20px', fontSize: '14px', color: '#34495e', fontWeight: '500' }}>
+                  {d.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Public Complaints Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '24px', color: '#2c3e50', margin: 0 }}>Public Complaints</h2>
+        <span style={{ color: '#7f8c8d', fontSize: '14px' }}>Showing recent active complaints</span>
+      </div>
+
+      {org.recent_complaints && org.recent_complaints.length > 0 ? (
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {org.recent_complaints.map((complaint) => (
+            <div key={complaint.complaint_id} style={{
+              background: '#fff',
+              border: '1px solid #ebebeb',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              cursor: 'default'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.02)';
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <span style={{
+                  fontFamily: 'monospace',
+                  background: '#f1f2f6',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  color: '#57606f',
+                  fontSize: '12px'
+                }}>
+                  ID: {complaint.complaint_id}
+                </span>
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  background: complaint.status === 'CLOSED' ? '#e8f8f5' : (complaint.status === 'WORKING' ? '#fef9e7' : '#fdedec'),
+                  color: complaint.status === 'CLOSED' ? '#27ae60' : (complaint.status === 'WORKING' ? '#f39c12' : '#e74c3c')
+                }}>
+                  {complaint.status}
+                </span>
+              </div>
+
+              <p style={{ color: '#2c3e50', fontSize: '16px', lineHeight: '1.5', margin: '0 0 15px 0' }}>
+                {complaint.description.length > 150
+                  ? complaint.description.substring(0, 150) + '...'
+                  : complaint.description}
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#95a5a6', borderTop: '1px solid #f1f2f6', paddingTop: '15px' }}>
+                <span>Severity: {complaint.severity}/5</span>
+                <span>Reported: {new Date(complaint.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          background: '#f8f9fa',
+          borderRadius: '12px',
+          padding: '40px',
+          textAlign: 'center',
+          color: '#7f8c8d'
+        }}>
+          <p style={{ fontSize: '18px', margin: '0 0 10px 0' }}>No public complaints found.</p>
+          <p style={{ fontSize: '14px', margin: 0 }}>This organisation currently has no recent complaints on record.</p>
+        </div>
+      )}
     </div>
   );
 }

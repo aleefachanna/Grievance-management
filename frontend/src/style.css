@@ -1,86 +1,147 @@
+/* style.css - Updated to Modern Dark SaaS Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #13131f;
+  --accent-primary: #6366f1;
+  --accent-secondary: #a855f7;
+  --accent-glow: rgba(99, 102, 241, 0.4);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-bg: rgba(19, 19, 31, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
 /* --- Global Reset & Wrapper --- */
 .resolve-wrapper {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #210E2A 0%, #2D1A3A 100%);
-    color: white;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #210E2A 0%, #2D1A3A 100%);
+  color: white;
+  background-color: var(--bg-primary);
   min-height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
-  align-items: center;      /* Horizontal Center */
-  justify-content: center;   /* Vertical Center */
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
+  color: var(--text-main);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add background glows matching Home */
+.resolve-wrapper::before,
+.resolve-wrapper::after {
+  content: '';
+  position: absolute;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.4;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.resolve-wrapper::before {
+  top: -10%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--accent-primary) 0%, transparent 70%);
+}
+
+.resolve-wrapper::after {
+  bottom: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%);
 }
 
 /* --- The Main Card Container --- */
 .resolve-card {
-  background-color: white;
+  position: relative;
+  z-index: 10;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-width: 420px; /* Standard width for login/track */
-  border-top: 8px solid #859E75;
+  max-width: 420px;
   box-sizing: border-box;
   text-align: center;
 }
 
-/* Wider variant for Create Organisation */
 .resolve-card-wide {
   max-width: 800px;
 }
 
 /* --- Typography --- */
 .resolve-logo-text {
-  color: #859E75;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-size: 32px;
-  font-weight: bold;
+  font-weight: 800;
   margin-bottom: 5px;
   display: block;
+  letter-spacing: -0.5px;
 }
 
 .resolve-header {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-main);
   margin-bottom: 25px;
 }
 
 /* --- Form Elements --- */
 .resolve-input-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   text-align: left;
 }
 
 .resolve-label {
   display: block;
   margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #555;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .resolve-input {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
   font-size: 15px;
   box-sizing: border-box;
-  background-color: #fff; /* Fixes dark input bug */
-  color: #000;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text-main);
   outline: none;
-  transition: border-color 0.3s;
+  transition: all 0.3s ease;
+  font-family: inherit;
 }
 
 .resolve-input:focus {
-  border-color: #859E75;
+  border-color: var(--accent-primary);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-/* --- Grid System for Create Org --- */
+.resolve-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* --- Grid System --- */
 .resolve-row {
   display: flex;
   gap: 20px;
@@ -96,24 +157,27 @@
 .resolve-btn {
   width: 100%;
   padding: 14px;
-  background-color: #859E75; 
+  background-color: #859E75;
   color: black;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
   cursor: pointer;
   margin-top: 15px;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 30px rgba(133, 158, 117, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(133, 158, 117, 0.3);
 }
 
 .resolve-btn:hover {
-      background-color: #FFF3B8;
-    color: #210E2A;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(255, 243, 184, 0.4);
+  background-color: #FFF3B8;
+  color: #210E2A;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 243, 184, 0.4);
 }
+
 .resolve-input {
   width: 100%;
   padding: 12px;
@@ -121,71 +185,46 @@
   border: 1px solid #ccc;
   font-size: 15px;
   box-sizing: border-box;
-  background-color: #fff; /* Fixes dark/transparent inputs */
+  background-color: #fff;
+  /* Fixes dark/transparent inputs */
   color: #000;
   outline: none;
   transition: border-color 0.3s;
-  font-family: inherit; /* Ensures textareas use the same font */
+  font-family: inherit;
+  /* Ensures textareas use the same font */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--accent-glow);
 }
 
-.resolve-input:focus {
-  border-color: #859E75;
+.resolve-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-glow);
 }
 
-/* Ensure the card is ready for absolute positioning */
-.resolve-card {
-  position: relative; /* Crucial for absolute button placement */
-  /* ... rest of your resolve-card styles ... */
-}
-
-/* --- Minimalist Back Button Styling --- */
-.resolve-btn-back-minimal {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  width: 24px;   /* Small and subtle */
-  height: 24px;
-  background: none; /* Removed background for minimalism */
-  border: none;      /* Removed border for minimalism */
-  color: #999;       /* Light, subtle grey */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 20px;   /* Size of the '×' or standard icon */
-  padding: 0;
-  line-height: 1;
-}
-
-.resolve-btn-back-minimal:hover {
-  color: #B76B5C; /* Fades to your theme terracotta on hover */
-  transform: scale(1.1); /* Subtle grow effect */
-}
-/* --- Modern Arrow Icon Button --- */
+/* --- Modern Back Buttons --- */
+.resolve-btn-back-minimal,
 .resolve-back-icon-btn {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: transparent;
-  border: none;
-  color: #555; /* Neutral dark grey */
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  z-index: 20;
 }
 
-.resolve-back-icon-btn:hover {
-  color: #210E2A; /* Brand Purple */
-  background-color: rgba(0, 0, 0, 0.05); /* Very light ghost hover */
-  transform: translateX(-3px); /* Subtle directional hint */
-}
-
-/* Ensure the card is relative for the button position */
-.resolve-card {
-  position: relative;
+.resolve-back-icon-btn:hover,
+.resolve-btn-back-minimal:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }

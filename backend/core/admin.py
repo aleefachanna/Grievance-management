@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Department, Complaint, Employee, Manager, DepartmentWork
-from organisation.models import Organisation
+from .models import Department, Complaint, Employee, Manager, DepartmentWork,Organisation
 admin.site.register(Organisation)
 admin.site.register(Department)
 admin.site.register(Employee)

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Organisation
+from core.models import Organisation
 
 class OrganisationForm(forms.ModelForm):
     class Meta:
