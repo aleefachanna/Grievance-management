@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './style.css';
-import React, { useState, useRef, useCallback } from 'react';
-import { api } from './api';
+import api from './api';
 import './CreateOrg.css';
 
 // ── Step definitions ──────────────────────────────────────────
@@ -95,7 +93,6 @@ const CreateOrg = () => {
   });
 
   const navigate = useNavigate();
-
   const otpRefs = useRef([]);
 
   const setField = (key, val) => setForm(f => ({ ...f, [key]: val }));
@@ -109,559 +106,431 @@ const CreateOrg = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Submitting Organisation:", formData);
-    // Integration logic goes here
-  };
-
-
-  const categoryOptions = [
-    { label: 'For-Profit', value: 'for_profit' },
-    { label: 'Non-Profit', value: 'non_profit' },
-    { label: 'Government', value: 'govt' },
-    { label: 'Sole Proprietorship', value: 'sole_proprietorship' },
-    { label: 'Partnership', value: 'partnership' },
-    { label: 'Company', value: 'company' },
-    { label: 'Cooperative Society', value: 'cooperative' }
-  ];
-
-  return (
-    <div className="resolve-wrapper">
-      {/* Use the wide variant of the card for multi-column forms */}
-      <div className="resolve-card resolve-card-wide">
-
-        {/* Modern Arrow Back Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="resolve-back-icon-btn"
-          title="Back to Home"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        <div className="resolve-logo-area">
-          <span className="resolve-logo-text">ResolvePro</span>
-        </div>
-
-        <h2 className="resolve-header" style={{ textAlign: 'center', color: '#B76B5C' }}>
-          Create New Organisation
-        </h2>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px', fontSize: '14px' }}>
-          Please provide the official details for registration.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="resolve-input-group">
-            <label className="resolve-label">Organisation Name *</label>
-            <input
-              className="resolve-input"
-              type="text"
-              name="orgName"
-              placeholder="Enter full legal name"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="resolve-row">
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">Select Type *</label>
-                <select className="resolve-input" name="type" onChange={handleChange} required>
-                  <option value="">Choose...</option>
-                  <option value="corporate">Corporate</option>
-                  <option value="ngo">NGO</option>
-                  <option value="govt">Government</option>
-                  <option value="edu">Educational</option>
-                </select>
-              </div>
-            </div>
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">Official Email *</label>
-                <input
-                  className="resolve-input"
-                  type="email"
-                  name="email"
-                  placeholder="contact@org.com"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="resolve-row">
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">Contact Phone *</label>
-                <input
-                  className="resolve-input"
-                  type="tel"
-                  name="phone"
-                  placeholder="+1 234 567 890"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">Website</label>
-                <input
-                  className="resolve-input"
-                  type="url"
-                  name="website"
-                  placeholder="https://www.example.com"
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="resolve-row">
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">City *</label>
-                <input className="resolve-input" type="text" name="city" onChange={handleChange} required />
-              </div>
-            </div>
-            <div className="resolve-col">
-              <div className="resolve-input-group">
-                <label className="resolve-label">State *</label>
-                <input className="resolve-input" type="text" name="state" onChange={handleChange} required />
-              </div>
-            </div>
-          </div>
-
-          <div className="resolve-input-group">
-            <label className="resolve-label">Country *</label>
-            <input className="resolve-input" type="text" name="country" onChange={handleChange} required />
-          </div>
-
-          <button type="submit" className="resolve-btn">
-            Register Organisation
-          </button>
-        </form>
   // ── OTP input logic ──────────────────────────────────────────
   const handleOtpChange = (idx, val) => {
     const cleaned = val.replace(/\D/, '').slice(0, 1);
-        const updated = [...otp];
-        updated[idx] = cleaned;
-        setOtp(updated);
-        if (cleaned && idx < 5) otpRefs.current[idx + 1]?.focus();
+    const updated = [...otp];
+    updated[idx] = cleaned;
+    setOtp(updated);
+    if (cleaned && idx < 5) otpRefs.current[idx + 1]?.focus();
   };
 
   const handleOtpKeyDown = (idx, e) => {
     if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
-          otpRefs.current[idx - 1]?.focus();
+      otpRefs.current[idx - 1]?.focus();
     }
   };
 
   const handleOtpPaste = (e) => {
-          e.preventDefault();
-        const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-        const updated = [...otp];
-    text.split('').forEach((ch, i) => {updated[i] = ch; });
-        setOtp(updated);
-        otpRefs.current[Math.min(text.length, 5)]?.focus();
+    e.preventDefault();
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const updated = [...otp];
+    text.split('').forEach((ch, i) => { updated[i] = ch; });
+    setOtp(updated);
+    otpRefs.current[Math.min(text.length, 5)]?.focus();
   };
 
   // ── Logo upload ──────────────────────────────────────────────
   const handleLogo = (e) => {
     const file = e.target.files[0];
-        if (!file) return;
-        setLogoFile(file);
-        setLogoPreview(URL.createObjectURL(file));
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
   };
 
   // ── Step 1: Send OTP ─────────────────────────────────────────
   const sendOtp = async (e) => {
-          e.preventDefault();
-        if (!adminEmail) {setError('Email is required.'); return; }
-        setLoading(true); setError('');
-        try {
-          await api.post('/organisation/send-otp/', { email: adminEmail });
-        setStep(2);
+    e.preventDefault();
+    if (!adminEmail) { setError('Email is required.'); return; }
+    setLoading(true); setError('');
+    try {
+      await api.post('/organisation/send-otp/', { email: adminEmail });
+      setStep(2);
     } catch (err) {
-          setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
+      setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
     } finally {
-          setLoading(false);
+      setLoading(false);
     }
   };
 
   // ── Step 2: Verify OTP ───────────────────────────────────────
   const verifyOtp = (e) => {
-          e.preventDefault();
-        const code = otp.join('');
-        if (code.length < 6) {setError('Please enter the full 6-digit OTP.'); return; }
-        setError('');
-        // We don't verify OTP separately — it's verified at submit time
-        setStep(3);
+    e.preventDefault();
+    const code = otp.join('');
+    if (code.length < 6) { setError('Please enter the full 6-digit OTP.'); return; }
+    setError('');
+    setStep(3);
   };
 
   // ── Step 5: Submit ───────────────────────────────────────────
   const handleSubmit = async (e) => {
-          e.preventDefault();
-        setLoading(true); setError('');
-        try {
+    e.preventDefault();
+    setLoading(true); setError('');
+    try {
       const payload = new FormData();
-        payload.append('adminEmail',  adminEmail);
-        payload.append('otp',         otp.join(''));
-        payload.append('adminName',   form.adminName);
-        payload.append('orgName',     form.orgName);
-        payload.append('orgType',     form.orgType);
-        payload.append('cin',         form.cin);
-        payload.append('gstin',       form.gstin);
-        payload.append('description', form.description);
-        payload.append('city',        form.city);
-        payload.append('state',       form.state);
-        payload.append('country',     form.country);
-        payload.append('email',       form.email);
-        payload.append('phone',       form.phone);
-        payload.append('website',     form.website);
-        payload.append('categories',  JSON.stringify(form.categories));
-        if (logoFile) payload.append('logo', logoFile);
+      payload.append('adminEmail', adminEmail);
+      payload.append('otp', otp.join(''));
+      payload.append('adminName', form.adminName);
+      payload.append('orgName', form.orgName);
+      payload.append('orgType', form.orgType);
+      payload.append('cin', form.cin);
+      payload.append('gstin', form.gstin);
+      payload.append('description', form.description);
+      payload.append('city', form.city);
+      payload.append('state', form.state);
+      payload.append('country', form.country);
+      payload.append('email', form.email);
+      payload.append('phone', form.phone);
+      payload.append('website', form.website);
+      payload.append('categories', JSON.stringify(form.categories));
+      if (logoFile) payload.append('logo', logoFile);
 
-        const res = await api.post('/organisation/create/', payload, {
-          headers: {'Content-Type': 'multipart/form-data' },
+      const res = await api.post('/organisation/create/', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-        setSuccessData(res.data);
+      setSuccessData(res.data);
     } catch (err) {
-          setError(err.response?.data?.error || 'Failed to create organisation.');
-        // If OTP error, send back to step 2
-        if (err.response?.data?.error?.toLowerCase().includes('otp')) setStep(2);
+      setError(err.response?.data?.error || 'Failed to create organisation.');
+      if (err.response?.data?.error?.toLowerCase().includes('otp')) setStep(2);
     } finally {
-          setLoading(false);
+      setLoading(false);
     }
   };
 
-  const next = () => {setError(''); setStep(s => s + 1); };
-  const back = () => {setError(''); setStep(s => s - 1); };
+  const next = () => { setError(''); setStep(s => s + 1); };
+  const back = () => { setError(''); setStep(s => s - 1); };
 
-        // ── Success ──────────────────────────────────────────────────
-        if (successData) {
+  // ── Success ──────────────────────────────────────────────────
+  if (successData) {
     return (
-        <div className="co-wrapper">
-          <div className="co-brand">
-            <div className="co-brand-logo">ResolvePro</div>
-            <div className="co-brand-tagline">Grievance Management Platform</div>
-          </div>
-          <div className="co-card" style={{ textAlign: 'center' }}>
-            <div className="co-success-icon">✓</div>
-            <h2 style={{ color: '#fff', fontSize: 26, marginBottom: 8 }}>Organisation Created!</h2>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 0 }}>
-              Your organisation is live. Save these credentials — they won't be shown again.
-            </p>
-            <div className="co-warning-box" style={{ marginTop: 20 }}>
-              ⚠️ Copy these credentials now. The temporary password cannot be recovered.
-            </div>
-            <div className="co-cred-box">
-              <div className="co-cred-row">
-                <span className="co-cred-label">Manager Email</span>
-                <span className="co-cred-value">{successData.manager_email}</span>
-              </div>
-              <div className="co-cred-row">
-                <span className="co-cred-label">Temp Password</span>
-                <span className="co-cred-value">{successData.password}</span>
-              </div>
-              <div className="co-cred-row">
-                <span className="co-cred-label">Org Slug</span>
-                <span className="co-cred-value">{successData.organisation_slug}</span>
-              </div>
-            </div>
-            <a
-              href="/manager-login"
-              className="co-btn-primary"
-              style={{ display: 'block', textDecoration: 'none', marginTop: 8, textAlign: 'center', lineHeight: '1' }}
-            >
-              Go to Manager Login →
-            </a>
-          </div>
+      <div className="co-wrapper">
+        <div className="co-brand">
+          <div className="co-brand-logo">ResolvePro</div>
+          <div className="co-brand-tagline">Grievance Management Platform</div>
         </div>
-        );
+        <div className="co-card" style={{ textAlign: 'center' }}>
+          <div className="co-success-icon">✓</div>
+          <h2 style={{ color: '#fff', fontSize: 26, marginBottom: 8 }}>Organisation Created!</h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 0 }}>
+            Your organisation is live. Save these credentials — they won't be shown again.
+          </p>
+          <div className="co-warning-box" style={{ marginTop: 20 }}>
+            ⚠️ Copy these credentials now. The temporary password cannot be recovered.
+          </div>
+          <div className="co-cred-box">
+            <div className="co-cred-row">
+              <span className="co-cred-label">Manager Email</span>
+              <span className="co-cred-value">{successData.manager_email}</span>
+            </div>
+            <div className="co-cred-row">
+              <span className="co-cred-label">Temp Password</span>
+              <span className="co-cred-value">{successData.password}</span>
+            </div>
+            <div className="co-cred-row">
+              <span className="co-cred-label">Org Slug</span>
+              <span className="co-cred-value">{successData.organisation_slug}</span>
+            </div>
+          </div>
+          <a
+            href="/manager-login"
+            className="co-btn-primary"
+            style={{ display: 'block', textDecoration: 'none', marginTop: 16, textAlign: 'center', lineHeight: '1' }}
+          >
+            Go to Manager Login →
+          </a>
+        </div>
+      </div>
+    );
   }
 
-        return (
-        <div className="co-wrapper">
-          {/* Brand */}
-          <div className="co-brand">
-            <div className="co-brand-logo">ResolvePro</div>
-            <div className="co-brand-tagline">Register your organisation</div>
-          </div>
+  return (
+    <div className="co-wrapper">
+      {/* Brand */}
+      <div className="co-brand" style={{ position: 'relative' }}>
+        {/* Back to Home Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="co-back-button"
+          title="Back to Home"
+          style={{ position: 'absolute', left: '-60px', top: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" />
+          </svg>
+        </button>
+        <div className="co-brand-logo">ResolvePro</div>
+        <div className="co-brand-tagline">Register your organisation</div>
+      </div>
 
-          {/* Progress */}
-          <ProgressBar current={step} />
+      {/* Progress */}
+      <ProgressBar current={step} />
 
-          {/* Card */}
-          <div className="co-card">
-            {error && <div className="co-error">⚠ {error}</div>}
+      {/* Card */}
+      <div className="co-card">
+        {error && <div className="co-error">⚠ {error}</div>}
 
-            {/* ── STEP 1: Email ── */}
-            {step === 1 && (
-              <form onSubmit={sendOtp}>
-                <div className="co-step-header">
-                  <div className="co-step-tag">Step 1 of 5</div>
-                  <h2 className="co-step-title">Verify your email</h2>
-                  <p className="co-step-subtitle">
-                    We'll send a one-time code to your admin email address to confirm your identity.
-                  </p>
+        {/* ── STEP 1: Email ── */}
+        {step === 1 && (
+          <form onSubmit={sendOtp}>
+            <div className="co-step-header">
+              <div className="co-step-tag">Step 1 of 5</div>
+              <h2 className="co-step-title">Verify your email</h2>
+              <p className="co-step-subtitle">
+                We'll send a one-time code to your admin email address to confirm your identity.
+              </p>
+            </div>
+
+            <Field label="Admin Email Address *">
+              <input
+                className="co-input"
+                type="email"
+                placeholder="admin@yourcompany.com"
+                value={adminEmail}
+                onChange={e => setAdminEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </Field>
+
+            <div className="co-btn-row">
+              <button type="submit" className="co-btn-primary" disabled={loading}>
+                {loading ? 'Sending…' : 'Send OTP Code →'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ── STEP 2: OTP ── */}
+        {step === 2 && (
+          <form onSubmit={verifyOtp}>
+            <div className="co-step-header">
+              <div className="co-step-tag">Step 2 of 5</div>
+              <h2 className="co-step-title">Enter the OTP</h2>
+              <p className="co-step-subtitle">
+                Check your <strong style={{ color: '#a78bfa' }}>Django terminal</strong> for the 6-digit code sent to <strong style={{ color: '#fff' }}>{adminEmail}</strong>.
+              </p>
+            </div>
+
+            <div className="co-otp-wrapper" onPaste={handleOtpPaste}>
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={el => (otpRefs.current[i] = el)}
+                  className="co-otp-digit"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleOtpChange(i, e.target.value)}
+                  onKeyDown={e => handleOtpKeyDown(i, e)}
+                />
+              ))}
+            </div>
+
+            <div className="co-resend">
+              Didn't receive it?{' '}
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await api.post('/organisation/send-otp/', { email: adminEmail });
+                    setError('');
+                  } catch (err) {
+                    setError('Could not resend OTP.');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                Resend OTP
+              </button>
+            </div>
+
+            <div className="co-btn-row">
+              <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
+              <button type="submit" className="co-btn-primary" disabled={otp.join('').length < 6}>
+                Verify & Continue →
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ── STEP 3: Organisation Details ── */}
+        {step === 3 && (
+          <form onSubmit={e => { e.preventDefault(); next(); }}>
+            <div className="co-step-header">
+              <div className="co-step-tag">Step 3 of 5</div>
+              <h2 className="co-step-title">Organisation Details</h2>
+              <p className="co-step-subtitle">Tell us about your organisation.</p>
+            </div>
+
+            <Row>
+              <div className="co-form-group">
+                <label className="co-label">Organisation Name *</label>
+                <input className="co-input" type="text" placeholder="Acme Corp Ltd."
+                  value={form.orgName} onChange={e => setField('orgName', e.target.value)} required />
+              </div>
+              <div className="co-form-group">
+                <label className="co-label">Organisation Type *</label>
+                <select className="co-select" value={form.orgType} onChange={e => setField('orgType', e.target.value)}>
+                  {ORG_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+            </Row>
+
+            <Row>
+              <div className="co-form-group">
+                <label className="co-label">CIN (Corporate ID)</label>
+                <input className="co-input" type="text" placeholder="U12345MH2020PTC..."
+                  value={form.cin} onChange={e => setField('cin', e.target.value)} />
+              </div>
+              <div className="co-form-group">
+                <label className="co-label">GSTIN</label>
+                <input className="co-input" type="text" placeholder="22AAAAA0000A1Z5"
+                  value={form.gstin} onChange={e => setField('gstin', e.target.value)} />
+              </div>
+            </Row>
+
+            <Field label="Office Address / Description">
+              <textarea className="co-textarea" placeholder="Registered office address or brief description…"
+                value={form.description} onChange={e => setField('description', e.target.value)} />
+            </Field>
+
+            <Row>
+              <div className="co-form-group">
+                <label className="co-label">City *</label>
+                <input className="co-input" type="text" placeholder="Mumbai"
+                  value={form.city} onChange={e => setField('city', e.target.value)} required />
+              </div>
+              <div className="co-form-group">
+                <label className="co-label">State *</label>
+                <input className="co-input" type="text" placeholder="Maharashtra"
+                  value={form.state} onChange={e => setField('state', e.target.value)} required />
+              </div>
+              <div className="co-form-group">
+                <label className="co-label">Country *</label>
+                <input className="co-input" type="text" placeholder="India"
+                  value={form.country} onChange={e => setField('country', e.target.value)} required />
+              </div>
+            </Row>
+
+            <div className="co-section-divider">Organisation Categories</div>
+            <div className="co-checkbox-grid">
+              {CATEGORIES.map(opt => (
+                <label key={opt.value} className="co-checkbox-item">
+                  <input type="checkbox" value={opt.value}
+                    checked={form.categories.includes(opt.value)}
+                    onChange={() => toggleCategory(opt.value)} />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="co-btn-row">
+              <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
+              <button type="submit" className="co-btn-primary">Next: Branding →</button>
+            </div>
+          </form>
+        )}
+
+        {/* ── STEP 4: Branding & Contact ── */}
+        {step === 4 && (
+          <form onSubmit={e => { e.preventDefault(); next(); }}>
+            <div className="co-step-header">
+              <div className="co-step-tag">Step 4 of 5</div>
+              <h2 className="co-step-title">Branding & Contact</h2>
+              <p className="co-step-subtitle">Upload your logo and add public contact details.</p>
+            </div>
+
+            <Field label="Organisation Logo">
+              <div className="co-logo-upload">
+                <input type="file" accept="image/*" onChange={handleLogo} />
+                {logoPreview ? (
+                  <>
+                    <img src={logoPreview} alt="Logo preview" className="co-logo-preview" />
+                    <p className="co-logo-text">Click to change logo</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="co-logo-icon">🏢</div>
+                    <p className="co-logo-text"><strong>Click to upload</strong> or drag & drop<br />PNG, JPG, SVG — max 2 MB</p>
+                  </>
+                )}
+              </div>
+            </Field>
+
+            <Row>
+              <div className="co-form-group">
+                <label className="co-label">Official Email *</label>
+                <input className="co-input" type="email" placeholder="contact@acme.com"
+                  value={form.email} onChange={e => setField('email', e.target.value)} required />
+              </div>
+              <div className="co-form-group">
+                <label className="co-label">Contact Phone</label>
+                <input className="co-input" type="tel" placeholder="+91 98765 43210"
+                  value={form.phone} onChange={e => setField('phone', e.target.value)} />
+              </div>
+            </Row>
+
+            <Field label="Website">
+              <input className="co-input" type="url" placeholder="https://www.acme.com"
+                value={form.website} onChange={e => setField('website', e.target.value)} />
+            </Field>
+
+            <div className="co-btn-row">
+              <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
+              <button type="submit" className="co-btn-primary">Next: Confirm →</button>
+            </div>
+          </form>
+        )}
+
+        {/* ── STEP 5: Admin & Review ── */}
+        {step === 5 && (
+          <form onSubmit={handleSubmit}>
+            <div className="co-step-header">
+              <div className="co-step-tag">Step 5 of 5</div>
+              <h2 className="co-step-title">Review & Submit</h2>
+              <p className="co-step-subtitle">Confirm your details and create the organisation.</p>
+            </div>
+
+            <Field label="Admin Full Name *">
+              <input className="co-input" type="text" placeholder="John Doe"
+                value={form.adminName} onChange={e => setField('adminName', e.target.value)} required autoFocus />
+            </Field>
+
+            <div className="co-section-divider">Summary</div>
+            <div className="co-review-grid">
+              {[
+                ['Organisation', form.orgName],
+                ['Type', ORG_TYPES.find(t => t.value === form.orgType)?.label],
+                ['Location', [form.city, form.state, form.country].filter(Boolean).join(', ')],
+                ['Admin Email', adminEmail],
+                ['Official Email', form.email],
+                ['CIN', form.cin || '—'],
+                ['GSTIN', form.gstin || '—'],
+                ['Phone', form.phone || '—'],
+                ['Website', form.website || '—'],
+                ['Logo', logoFile ? logoFile.name : 'Not uploaded'],
+              ].map(([key, val]) => (
+                <div className="co-review-item" key={key}>
+                  <span className="co-review-key">{key}</span>
+                  <span className="co-review-val">{val}</span>
                 </div>
+              ))}
+            </div>
 
-                <Field label="Admin Email Address *">
-                  <input
-                    className="co-input"
-                    type="email"
-                    placeholder="admin@yourcompany.com"
-                    value={adminEmail}
-                    onChange={e => setAdminEmail(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </Field>
-
-                <div className="co-btn-row">
-                  <button type="submit" className="co-btn-primary" disabled={loading}>
-                    {loading ? 'Sending…' : 'Send OTP Code →'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* ── STEP 2: OTP ── */}
-            {step === 2 && (
-              <form onSubmit={verifyOtp}>
-                <div className="co-step-header">
-                  <div className="co-step-tag">Step 2 of 5</div>
-                  <h2 className="co-step-title">Enter the OTP</h2>
-                  <p className="co-step-subtitle">
-                    Check your <strong style={{ color: '#a78bfa' }}>Django terminal</strong> for the 6-digit code sent to <strong style={{ color: '#fff' }}>{adminEmail}</strong>.
-                  </p>
-                </div>
-
-                <div className="co-otp-wrapper" onPaste={handleOtpPaste}>
-                  {otp.map((digit, i) => (
-                    <input
-                      key={i}
-                      ref={el => (otpRefs.current[i] = el)}
-                      className="co-otp-digit"
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={e => handleOtpChange(i, e.target.value)}
-                      onKeyDown={e => handleOtpKeyDown(i, e)}
-                    />
-                  ))}
-                </div>
-
-                <div className="co-resend">
-                  Didn't receive it?{' '}
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setLoading(true);
-                      try {
-                        await api.post('/organisation/send-otp/', { email: adminEmail });
-                        setError('');
-                      } catch (err) {
-                        setError('Could not resend OTP.');
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                  >
-                    Resend OTP
-                  </button>
-                </div>
-
-                <div className="co-btn-row">
-                  <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
-                  <button type="submit" className="co-btn-primary" disabled={otp.join('').length < 6}>
-                    Verify & Continue →
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* ── STEP 3: Organisation Details ── */}
-            {step === 3 && (
-              <form onSubmit={e => { e.preventDefault(); next(); }}>
-                <div className="co-step-header">
-                  <div className="co-step-tag">Step 3 of 5</div>
-                  <h2 className="co-step-title">Organisation Details</h2>
-                  <p className="co-step-subtitle">Tell us about your organisation.</p>
-                </div>
-
-                <Row>
-                  <div className="co-form-group">
-                    <label className="co-label">Organisation Name *</label>
-                    <input className="co-input" type="text" placeholder="Acme Corp Ltd."
-                      value={form.orgName} onChange={e => setField('orgName', e.target.value)} required />
-                  </div>
-                  <div className="co-form-group">
-                    <label className="co-label">Organisation Type *</label>
-                    <select className="co-select" value={form.orgType} onChange={e => setField('orgType', e.target.value)}>
-                      {ORG_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
-                  </div>
-                </Row>
-
-                <Row>
-                  <div className="co-form-group">
-                    <label className="co-label">CIN (Corporate ID)</label>
-                    <input className="co-input" type="text" placeholder="U12345MH2020PTC..."
-                      value={form.cin} onChange={e => setField('cin', e.target.value)} />
-                  </div>
-                  <div className="co-form-group">
-                    <label className="co-label">GSTIN</label>
-                    <input className="co-input" type="text" placeholder="22AAAAA0000A1Z5"
-                      value={form.gstin} onChange={e => setField('gstin', e.target.value)} />
-                  </div>
-                </Row>
-
-                <Field label="Office Address / Description">
-                  <textarea className="co-textarea" placeholder="Registered office address or brief description…"
-                    value={form.description} onChange={e => setField('description', e.target.value)} />
-                </Field>
-
-                <Row>
-                  <div className="co-form-group">
-                    <label className="co-label">City *</label>
-                    <input className="co-input" type="text" placeholder="Mumbai"
-                      value={form.city} onChange={e => setField('city', e.target.value)} required />
-                  </div>
-                  <div className="co-form-group">
-                    <label className="co-label">State *</label>
-                    <input className="co-input" type="text" placeholder="Maharashtra"
-                      value={form.state} onChange={e => setField('state', e.target.value)} required />
-                  </div>
-                  <div className="co-form-group">
-                    <label className="co-label">Country *</label>
-                    <input className="co-input" type="text" placeholder="India"
-                      value={form.country} onChange={e => setField('country', e.target.value)} required />
-                  </div>
-                </Row>
-
-                <div className="co-section-divider">Organisation Categories</div>
-                <div className="co-checkbox-grid">
-                  {CATEGORIES.map(opt => (
-                    <label key={opt.value} className="co-checkbox-item">
-                      <input type="checkbox" value={opt.value}
-                        checked={form.categories.includes(opt.value)}
-                        onChange={() => toggleCategory(opt.value)} />
-                      <span>{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <div className="co-btn-row">
-                  <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
-                  <button type="submit" className="co-btn-primary">Next: Branding →</button>
-                </div>
-              </form>
-            )}
-
-            {/* ── STEP 4: Branding & Contact ── */}
-            {step === 4 && (
-              <form onSubmit={e => { e.preventDefault(); next(); }}>
-                <div className="co-step-header">
-                  <div className="co-step-tag">Step 4 of 5</div>
-                  <h2 className="co-step-title">Branding & Contact</h2>
-                  <p className="co-step-subtitle">Upload your logo and add public contact details.</p>
-                </div>
-
-                <Field label="Organisation Logo">
-                  <div className="co-logo-upload">
-                    <input type="file" accept="image/*" onChange={handleLogo} />
-                    {logoPreview ? (
-                      <>
-                        <img src={logoPreview} alt="Logo preview" className="co-logo-preview" />
-                        <p className="co-logo-text">Click to change logo</p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="co-logo-icon">🏢</div>
-                        <p className="co-logo-text"><strong>Click to upload</strong> or drag & drop<br />PNG, JPG, SVG — max 2 MB</p>
-                      </>
-                    )}
-                  </div>
-                </Field>
-
-                <Row>
-                  <div className="co-form-group">
-                    <label className="co-label">Official Email *</label>
-                    <input className="co-input" type="email" placeholder="contact@acme.com"
-                      value={form.email} onChange={e => setField('email', e.target.value)} required />
-                  </div>
-                  <div className="co-form-group">
-                    <label className="co-label">Contact Phone</label>
-                    <input className="co-input" type="tel" placeholder="+91 98765 43210"
-                      value={form.phone} onChange={e => setField('phone', e.target.value)} />
-                  </div>
-                </Row>
-
-                <Field label="Website">
-                  <input className="co-input" type="url" placeholder="https://www.acme.com"
-                    value={form.website} onChange={e => setField('website', e.target.value)} />
-                </Field>
-
-                <div className="co-btn-row">
-                  <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
-                  <button type="submit" className="co-btn-primary">Next: Confirm →</button>
-                </div>
-              </form>
-            )}
-
-            {/* ── STEP 5: Admin & Review ── */}
-            {step === 5 && (
-              <form onSubmit={handleSubmit}>
-                <div className="co-step-header">
-                  <div className="co-step-tag">Step 5 of 5</div>
-                  <h2 className="co-step-title">Review & Submit</h2>
-                  <p className="co-step-subtitle">Confirm your details and create the organisation.</p>
-                </div>
-
-                <Field label="Admin Full Name *">
-                  <input className="co-input" type="text" placeholder="John Doe"
-                    value={form.adminName} onChange={e => setField('adminName', e.target.value)} required autoFocus />
-                </Field>
-
-                <div className="co-section-divider">Summary</div>
-                <div className="co-review-grid">
-                  {[
-                    ['Organisation', form.orgName],
-                    ['Type', ORG_TYPES.find(t => t.value === form.orgType)?.label],
-                    ['Location', [form.city, form.state, form.country].filter(Boolean).join(', ')],
-                    ['Admin Email', adminEmail],
-                    ['Official Email', form.email],
-                    ['CIN', form.cin || '—'],
-                    ['GSTIN', form.gstin || '—'],
-                    ['Phone', form.phone || '—'],
-                    ['Website', form.website || '—'],
-                    ['Logo', logoFile ? logoFile.name : 'Not uploaded'],
-                  ].map(([key, val]) => (
-                    <div className="co-review-item" key={key}>
-                      <span className="co-review-key">{key}</span>
-                      <span className="co-review-val">{val}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="co-btn-row">
-                  <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
-                  <button type="submit" className="co-btn-primary" disabled={loading}>
-                    {loading ? 'Creating…' : '🚀 Create Organisation'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-        );
+            <div className="co-btn-row">
+              <button type="button" className="co-btn-secondary" onClick={back}>← Back</button>
+              <button type="submit" className="co-btn-primary" disabled={loading}>
+                {loading ? 'Creating…' : '🚀 Create Organisation'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
 };
 
-        export default CreateOrg; 
+export default CreateOrg; 

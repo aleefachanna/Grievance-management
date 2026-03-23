@@ -1,49 +1,46 @@
+import random
+import secrets
+from datetime import timedelta
+
 from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
+from django.db import transaction
+from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.db.models import Q, Case, When, Value, IntegerField
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
-from django.db import transaction
-import secrets
-import random
-from datetime import timedelta
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status
-from django.contrib.auth import authenticate
-from django.core.mail import EmailMessage
-from django.conf import settings
-# ... keep your other imports like APIView, Response, etc.
-from .models import Complaint, Department, DepartmentWork, Employee,Manager
-from organisation.models import Organisation
-from .serializers import ComplaintSerializer, DepartmentWorkSerializer, OrganisationSerializer
-from .service import classify_and_summarize, summarize_department_work, ai_assign_works
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .serializers import ComplaintTrackSerializer
-from django.contrib.auth.hashers import check_password
-from rest_framework.decorators import api_view
-from django.utils import timezone
-from django.db.models import Count
-from django.http import JsonResponse
 from django.utils.text import slugify
-from .models import Complaint, Department, DepartmentWork, Employee, Manager, Organisation, OTPVerification
+from rest_framework import status
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .models import (
+    Complaint,
+    ComplaintUpdate,
+    Department,
+    DepartmentWork,
+    Employee,
+    Manager,
+    Organisation,
+    OTPVerification,
+)
 from .serializers import (
-    ComplaintDetailSerializer,
     ComplaintCreateSerializer,
+    ComplaintDetailSerializer,
+    ComplaintTrackSerializer,
     DepartmentWorkSerializer,
     OrganisationSerializer,
-    ComplaintTrackSerializer
+    EmployeeSerializer,
 )
-from .service import classify_and_summarize
+from .service import ai_assign_works, classify_and_summarize, summarize_department_work
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -286,15 +283,12 @@ class ManagerDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         manager = get_object_or_404(Manager, user=request.user)
         org = manager.organisation
 
         departments = Department.objects.filter(organisation=org)
-        complaints = Complaint.objects.filter(organisation=org)
-        works = DepartmentWork.objects.filter(
-            department__organisation=org
-        )
+        complaints = Complaint.objects.filter(organisation=org).order_by("-created_at")
+        works = DepartmentWork.objects.filter(department__organisation=org).order_by("-created_at")
 
         return Response({
             "organisation": org.name,
@@ -303,59 +297,38 @@ class ManagerDashboardView(APIView):
                 "pending_complaints": complaints.exclude(status="CLOSED").count(),
                 "total_departments": departments.count()
             },
-            "departments": [{"id": d.id, "name": d.name} for d in departments],
+            "departments": [{"id": str(d.id), "name": d.name} for d in departments],
             "complaints": ComplaintDetailSerializer(complaints, many=True).data,
             "works": DepartmentWorkSerializer(works, many=True).data
         })
 
     def post(self, request):
-
         manager = get_object_or_404(Manager, user=request.user)
         org = manager.organisation
         action = request.data.get("action")
 
         if action == "reassign_complaint":
-            complaint = Complaint.objects.get(id=request.data.get("complaint_id"))
-            department = Department.objects.get(id=request.data.get("department_id"))
-            cid = request.data.get("complaint_id") # Define this
-            new_status = request.data.get("status")
-            complaint.departments.set([department])
-            complaint = get_object_or_404(
-                Complaint,
-                id=request.data.get("complaint_id"),
+            complaint_id_raw = request.data.get("complaint_id")
+            dept_id = request.data.get("department_id")
+            
+            # Can be either full UUID or the custom complaint_id string
+            complaint = Complaint.objects.filter(
+                Q(id=complaint_id_raw) | Q(complaint_id=complaint_id_raw),
                 organisation=org
-            )
+            ).first()
+            
+            if not complaint:
+                return Response({"error": "Complaint not found"}, status=404)
 
-            department = get_object_or_404(
-                Department,
-                id=request.data.get("department_id"),
-                organisation=org
-            )
+            department = get_object_or_404(Department, id=dept_id, organisation=org)
 
             complaint.department = department
             complaint.save()
 
-            return Response({"message": "Complaint reassigned"})
+            return Response({"message": "Complaint successfully reassigned"})
 
-        if not cid or not new_status:
-            return
+        return Response({"error": "Invalid action"}, status=400)
 
-        try:
-            complaint = Complaint.objects.get(id=cid)
-        except Complaint.DoesNotExist:
-            return
-
-        if department not in complaint.departments.all():
-            return
-
-        complaint.status = new_status
-
-        if new_status == "CLOSED":
-            complaint.closed_at = timezone.now()
-        else:
-            complaint.closed_at = None
-
-        complaint.save()
 
 
 def handle_create_work(request, department):
@@ -440,6 +413,8 @@ class SendOTPView(APIView):
             email=email,
             defaults={'otp': otp, 'created_at': timezone.now()}
         )
+
+        print(f"\n[OTP DEBUG] Sent OTP {otp} to {email}\n")
         
         # Send Email
         try:

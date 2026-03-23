@@ -51,24 +51,27 @@ class DepartmentSerializer(serializers.ModelSerializer):
 # =========================================================
 
 class EmployeeSerializer(serializers.ModelSerializer):
-    organisation = serializers.CharField(source="organisation.name", read_only=True)
-    department = serializers.CharField(source="department.name", read_only=True)
+    organisation_name = serializers.CharField(source="organisation.name", read_only=True)
+    department_name = serializers.CharField(source="department.name", read_only=True)
+    name = serializers.CharField(source="user.first_name", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+    is_hod = serializers.BooleanField(source="isHod", read_only=True)
 
     class Meta:
         model = Employee
         fields = [
             "id",
+            "employee_id",
             "name",
-            "organisation",
-            "department",
             "email",
-            "isFirstlogin",
+            "organisation_name",
+            "department_name",
+            "is_hod",
+            "is_first_login",
+            "is_active",
         ]
-        read_only_fields = [
-            "id",
-            "organisation",
-            "email",
-        ]
+        read_only_fields = fields
+
 
 
 # =========================================================
@@ -172,7 +175,7 @@ class ComplaintTrackSerializer(serializers.ModelSerializer):
 
 class DepartmentWorkSerializer(serializers.ModelSerializer):
     department = serializers.CharField(source="department.name", read_only=True)
-    complaint = serializers.CharField(source="complaint.complaint_id", read_only=True)
+    complaints = serializers.SerializerMethodField()
     assigned_employees = serializers.SerializerMethodField()
 
     class Meta:
@@ -181,17 +184,23 @@ class DepartmentWorkSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "description",
-            "complaint",
+            "complaints",
             "department",
             "status",
             "assigned_employees",
             "created_at",
             "closed_at",
         ]
-        read_only_fields = ["id", "department", "complaint", "status", "created_at", "closed_at", "assigned_employees"]
+        read_only_fields = ["id", "department", "complaints", "status", "created_at", "closed_at", "assigned_employees"]
         
+    def get_complaints(self, obj):
+        return [c.complaint_id for c in obj.complaints.all()]
+
     def get_assigned_employees(self, obj):
-        return [
-            {"id": str(emp.id), "name": emp.user.get_full_name() or emp.user.username}
-            for emp in obj.employees.all()
-        ]
+        names = []
+        for emp in obj.employees.all():
+            name = emp.user.get_full_name().strip()
+            if not name:
+                name = emp.user.username
+            names.append({"id": str(emp.id), "name": name})
+        return names

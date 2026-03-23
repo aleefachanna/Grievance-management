@@ -26,6 +26,8 @@ router.register(r"department/works", DepartmentWorkViewSet, basename="dept-works
 urlpatterns = [
     
     # ---------------- Public Organisation APIs ----------------
+    path('organisation/create/', CreateOrganisationView.as_view(), name='create_organisation'),
+    path('organisation/send-otp/', SendOTPView.as_view(), name='send_otp'),
     path('organisation/<slug:slug>/', get_organisation, name='get_organisation'),
     path('organisations/search/', search_organisations, name='search_organisations'),
     # ---------------- Manager Login ----------------
@@ -48,8 +50,6 @@ urlpatterns = [
 
     # ---------------- Manager Dashboard ----------------
     path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
-    path('organisation/create/', CreateOrganisationView.as_view(), name='create_organisation'),
-    path('organisation/send-otp/', SendOTPView.as_view(), name='send_otp'),
     path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
     path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
 ]

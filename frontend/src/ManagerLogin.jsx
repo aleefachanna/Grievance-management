@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./style.css";
@@ -6,18 +6,12 @@ import "./style.css";
 function ManagerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/manager-login/", {
-        org_id: orgId,
-        manager_id: managerId,
-        password: password,
-      });
-
-      localStorage.setItem("token", response.data.token);
       const response = await axios.post("http://127.0.0.1:8000/api/manager/login/", {
         email: email,
         password: password,
@@ -28,7 +22,7 @@ function ManagerLogin() {
 
       navigate("/managerdashboard");
     } catch (error) {
-      alert(error.response?.data?.message || "Invalid credentials");
+      setMessage(error.response?.data?.error || error.response?.data?.message || "Invalid credentials");
     }
   };
 
@@ -89,6 +83,7 @@ function ManagerLogin() {
           </button>
         </form>
 
+        {message && <p style={{ color: "red", marginTop: "15px", textAlign: "center" }}>{message}</p>}
       </div>
     </div>
   );

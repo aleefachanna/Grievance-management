@@ -6,7 +6,7 @@
   --accent-primary: #6366f1;
   --accent-secondary: #a855f7;
   --accent-glow: rgba(99, 102, 241, 0.4);
-  --text-main: #f8fafc;
+  --text-main: #8a5ce8;
   --text-muted: #94a3b8;
   --glass-bg: rgba(19, 19, 31, 0.7);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -19,42 +19,42 @@ body {
   margin: 0;
 }
 
-.admin-container { 
-  display: flex; 
-  min-height: 100vh; 
-  background: var(--bg-primary); 
+.admin-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-primary);
 }
 
-.sidebar { 
-  width: 260px; 
-  background: var(--bg-secondary); 
+.sidebar {
+  width: 260px;
+  background: var(--bg-secondary);
   border-right: 1px solid var(--glass-border);
-  color: var(--text-main); 
-  padding: 24px; 
+  color: var(--text-main);
+  padding: 24px;
   display: flex;
   flex-direction: column;
 }
 
-.sidebar h2 { 
+.sidebar h2 {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size: 1.4rem; 
-  margin-bottom: 40px; 
+  font-size: 1.4rem;
+  margin-bottom: 40px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
-.sidebar nav button { 
-  width: 100%; 
-  padding: 14px 16px; 
-  margin: 8px 0; 
-  background: transparent; 
-  border: 1px solid transparent; 
-  color: var(--text-muted); 
-  text-align: left; 
-  cursor: pointer; 
-  border-radius: 12px; 
+.sidebar nav button {
+  width: 100%;
+  padding: 14px 16px;
+  margin: 8px 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -65,15 +65,15 @@ body {
   color: var(--text-main);
 }
 
-.sidebar nav button.active { 
-  background: rgba(99, 102, 241, 0.1); 
+.sidebar nav button.active {
+  background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.3);
-  color: var(--accent-primary); 
+  color: var(--accent-primary);
 }
 
-.main-viewport { 
-  flex: 1; 
-  padding: 30px 40px; 
+.main-viewport {
+  flex: 1;
+  padding: 30px 40px;
   position: relative;
   overflow-y: auto;
 }
@@ -93,36 +93,36 @@ body {
   z-index: 0;
 }
 
-.top-nav { 
-  display: flex; 
-  justify-content: space-between; 
-  background: var(--glass-bg); 
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  padding: 20px 30px; 
-  border-radius: 16px; 
-  margin-bottom: 30px; 
+  padding: 20px 30px;
+  border-radius: 16px;
+  margin-bottom: 30px;
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 10;
 }
 
-.action-bar { 
-  margin-bottom: 24px; 
-  display: flex; 
-  gap: 16px; 
+.action-bar {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 16px;
   position: relative;
   z-index: 10;
 }
 
-.ai-btn { 
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); 
-  color: white; 
-  border: none; 
-  padding: 12px 24px; 
-  border-radius: 12px; 
-  font-weight: 600; 
-  cursor: pointer; 
+.ai-btn {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
   box-shadow: 0 4px 15px var(--accent-glow);
   transition: all 0.3s ease;
 }
@@ -132,14 +132,14 @@ body {
   box-shadow: 0 8px 25px var(--accent-glow);
 }
 
-.report-btn { 
-  background: rgba(255, 255, 255, 0.05); 
-  border: 1px solid var(--glass-border); 
-  color: var(--text-main); 
-  padding: 12px 24px; 
-  border-radius: 12px; 
-  font-weight: 600; 
-  cursor: pointer; 
+.report-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
@@ -148,38 +148,38 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.content-card { 
-  background: var(--glass-bg); 
+.content-card {
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  padding: 30px; 
-  border-radius: 16px; 
+  padding: 30px;
+  border-radius: 16px;
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 10;
 }
 
-.data-table { 
-  width: 100%; 
-  border-collapse: separate; 
+.data-table {
+  width: 100%;
+  border-collapse: separate;
   border-spacing: 0;
-  margin-top: 20px; 
+  margin-top: 20px;
 }
 
-.data-table th { 
-  text-align: left; 
-  padding: 16px; 
-  border-bottom: 1px solid var(--glass-border); 
-  color: var(--text-muted); 
+.data-table th {
+  text-align: left;
+  padding: 16px;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--text-muted);
   font-weight: 500;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.data-table td { 
-  padding: 16px; 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03); 
+.data-table td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   color: var(--text-main);
   font-size: 0.95rem;
 }
@@ -188,27 +188,27 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.pill { 
-  padding: 6px 12px; 
-  border-radius: 20px; 
-  font-size: 12px; 
-  font-weight: 600; 
+.pill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.5px;
 }
 
-.DONE { 
-  background: rgba(16, 185, 129, 0.15); 
-  color: #34d399; 
+.DONE {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.report-text { 
-  background: rgba(0, 0, 0, 0.2); 
-  padding: 24px; 
-  border-radius: 12px; 
-  line-height: 1.7; 
+.report-text {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  border-radius: 12px;
+  line-height: 1.7;
   color: var(--text-main);
-  white-space: pre-wrap; 
-  border-left: 4px solid var(--accent-primary); 
+  white-space: pre-wrap;
+  border-left: 4px solid var(--accent-primary);
   font-family: 'Inter', sans-serif;
 }
