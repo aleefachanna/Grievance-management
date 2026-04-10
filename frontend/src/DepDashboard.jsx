@@ -44,7 +44,7 @@ function DepDashboard() {
   const runAIAssignment = async () => {
     setAiLoading(true);
     try {
-      const res = await pApi.post("/department/ai-assign/");
+      const res = await pApi.post("/department/ai/assign/");
       alert("AI Suggestion: " + JSON.stringify(res.data));
       loadAllData();
     } finally { setAiLoading(false); }

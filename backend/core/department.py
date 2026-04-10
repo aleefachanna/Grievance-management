@@ -57,10 +57,12 @@ class DepartmentWorkViewSet(viewsets.ModelViewSet):
         ).order_by("-created_at")
 
     def perform_create(self, serializer):
-        employee = self.request.user.employee
+        # Use get_object_or_404 to safely get employee profile
+        employee = get_object_or_404(Employee, user=self.request.user)
 
         if not employee.isHod:
-            return Response({"error": "Only HOD can create work"}, status=403)
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only HOD can create work")
 
         # Handle organisation boundary internally via self.request
         work = serializer.save(
@@ -72,9 +74,10 @@ class DepartmentWorkViewSet(viewsets.ModelViewSet):
         complaint_id = self.request.data.get("complaint_id")
         if complaint_id:
             try:
+                # Use id=complaint_id for database lookup
                 complaint = Complaint.objects.get(id=complaint_id, department=employee.department)
                 complaint.works.add(work)
-            except Complaint.DoesNotExist:
+            except (Complaint.DoesNotExist, ValueError):
                 pass
 
         # Assign employees if provided
