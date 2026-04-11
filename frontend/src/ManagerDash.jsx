@@ -24,6 +24,7 @@ function ManagerDash() {
 
     const [aiSummary, setAiSummary] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
+    const [aiAssignLoading, setAiAssignLoading] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -93,6 +94,20 @@ function ManagerDash() {
             alert(error.response?.data?.error || "Failed to generate AI summary");
         }
         setLoadingSummary(false);
+    };
+
+    const runAIAutoAssign = async () => {
+        setAiAssignLoading(true);
+        try {
+            const res = await pApi.post("/manager/ai/assign_employees/");
+            alert(res.data.message || "AI Auto-Assignment complete.");
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            alert("AI Assignment failed.");
+        } finally {
+            setAiAssignLoading(false);
+        }
     };
 
     const handleCreateDept = async (e) => {
@@ -294,7 +309,28 @@ function ManagerDash() {
 
                     {activeTab === "complaints" && (
                         <section>
-                            <h3 style={{ marginBottom: "20px" }}>Organisation Complaints</h3>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                                <h3 style={{ margin: 0 }}>Organisation Complaints</h3>
+                                <button 
+                                    onClick={runAIAutoAssign} 
+                                    disabled={aiAssignLoading}
+                                    style={{ 
+                                        padding: "10px 20px", 
+                                        background: "linear-gradient(45deg, #a855f7, #ec4899)", 
+                                        color: "white", 
+                                        border: "none", 
+                                        borderRadius: "8px", 
+                                        cursor: "pointer", 
+                                        fontWeight: "bold",
+                                        boxShadow: "0 4px 15px rgba(236, 72, 153, 0.3)",
+                                        transition: "all 0.3s ease"
+                                    }}
+                                    onMouseOver={(e) => e.target.style.transform = "translateY(-2px)"}
+                                    onMouseOut={(e) => e.target.style.transform = "translateY(0)"}
+                                >
+                                    {aiAssignLoading ? "AI Processing..." : "✨ AI Auto-Assign Staff"}
+                                </button>
+                            </div>
                             <div className="complaint-grid" style={{ gridTemplateColumns: "1fr" }}>
                                 {data.complaints.map((c, index) => (
                                     <div key={c.complaint_id} className="complaint-box" style={{ marginBottom: "15px" }}>
@@ -316,9 +352,12 @@ function ManagerDash() {
                                             </div>
                                         </div>
                                         <p>{c.description}</p>
-                                        <div className="box-footer" style={{ marginTop: "10px", justifyContent: "flex-start", gap: "10px", alignItems: "center" }}>
-                                            <span>Dept: {c.department || "None"}</span>
-                                            <span>Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
+                                        <div className="box-footer" style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-start" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem", color: "#4b5563" }}>
+                                                <span><strong>Dept:</strong> {c.department || "None"}</span>
+                                                <span><strong>Assignee:</strong> {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
+                                            </div>
+                                            <div style={{ display: "flex", gap: "10px", width: "100%" }}>
                                             <select
                                                 onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
                                                 style={{ padding: "5px", borderRadius: "4px" }}
@@ -340,6 +379,7 @@ function ManagerDash() {
                                                     <option key={emp.id} value={emp.id}>{emp.name}</option>
                                                 ))}
                                             </select>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

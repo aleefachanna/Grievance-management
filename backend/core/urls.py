@@ -19,6 +19,7 @@ from .views import (
     SendOTPView,
     DepartmentManagerView,
     EmployeeManagerView,
+    AIManagerEmployeeAssignView,
 )
 router = DefaultRouter()
 router.register(r"department/complaints", DepartmentComplaintViewSet, basename="dept-complaints")
@@ -54,5 +55,6 @@ urlpatterns = [
     path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
     path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
     path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
+    path('manager/ai/assign_employees/', AIManagerEmployeeAssignView.as_view()),
 ]
 urlpatterns += router.urls

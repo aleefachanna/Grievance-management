@@ -629,3 +629,57 @@ class EmployeeManagerView(APIView):
             "email": user.email,
             "password": temp_password
         }, status=201)
+
+class AIManagerEmployeeAssignView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .models import Manager, Employee, Complaint
+        from .service import ai_assign_employees
+        from django.db.models import Count
+
+        manager = get_object_or_404(Manager, user=request.user)
+        org = manager.organisation
+
+        # Get pending complaints with no assignments in this org
+        unassigned_complaints = Complaint.objects.annotate(
+            assignee_count=Count('assigned_employees')
+        ).filter(
+            organisation=org,
+            status='PENDING',
+            assignee_count=0
+        )
+
+        if not unassigned_complaints.exists():
+            return Response({"message": "No unassigned pending complaints found."})
+
+        # Get all employees in the org and their current load
+        employees = Employee.objects.filter(organisation=org).annotate(
+            current_load=Count('assigned_complaints', filter=~Q(assigned_complaints__status='CLOSED'))
+        )
+        
+        if not employees.exists():
+            return Response({"error": "No employees found in the organization."}, status=400)
+
+        employees_data = [
+            {"id": str(e.id), "name": f"{e.user.first_name} {e.user.last_name}".strip() or e.user.username, "count": e.current_load}
+            for e in employees
+        ]
+
+        result = ai_assign_employees(unassigned_complaints, employees_data)
+        mapping = result.get("mapping", {})
+
+        assigned_count = 0
+        for complaint_uuid_str, emp_uuid_str in mapping.items():
+            try:
+                complaint = unassigned_complaints.get(id=complaint_uuid_str)
+                employee = employees.get(id=emp_uuid_str)
+                complaint.assigned_employees.add(employee)
+                assigned_count += 1
+            except Exception:
+                continue
+
+        return Response({
+            "message": f"Successfully auto-assigned {assigned_count} complaints.",
+            "mapping": mapping
+        })
