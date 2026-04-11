@@ -220,6 +220,12 @@ class Complaint(models.Model):
         related_name='complaints'
     )
 
+    assigned_employees = models.ManyToManyField(
+        'Employee',
+        blank=True,
+        related_name='assigned_complaints'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True, blank=True)
 

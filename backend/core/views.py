@@ -311,11 +311,14 @@ class ManagerDashboardView(APIView):
             complaint_id_raw = request.data.get("complaint_id")
             dept_id = request.data.get("department_id")
             
-            # Can be either full UUID or the custom complaint_id string
-            complaint = Complaint.objects.filter(
-                Q(id=complaint_id_raw) | Q(complaint_id=complaint_id_raw),
-                organisation=org
-            ).first()
+            complaint = Complaint.objects.filter(complaint_id=complaint_id_raw, organisation=org).first()
+            if not complaint:
+                try:
+                    import uuid
+                    uuid_val = uuid.UUID(str(complaint_id_raw))
+                    complaint = Complaint.objects.filter(id=uuid_val, organisation=org).first()
+                except ValueError:
+                    pass
             
             if not complaint:
                 return Response({"error": "Complaint not found"}, status=404)
@@ -326,6 +329,47 @@ class ManagerDashboardView(APIView):
             complaint.save()
 
             return Response({"message": "Complaint successfully reassigned"})
+
+        if action == "assign_complaint_employee":
+            complaint_id_raw = request.data.get("complaint_id")
+            emp_ids = request.data.get("employee_ids", [])
+            
+            complaint = Complaint.objects.filter(complaint_id=complaint_id_raw, organisation=org).first()
+            if not complaint:
+                try:
+                    import uuid
+                    uuid_val = uuid.UUID(str(complaint_id_raw))
+                    complaint = Complaint.objects.filter(id=uuid_val, organisation=org).first()
+                except ValueError:
+                    pass
+            
+            if not complaint:
+                return Response({"error": "Complaint not found"}, status=404)
+
+            if not isinstance(emp_ids, list):
+                emp_ids = [emp_ids]
+                
+            emps = Employee.objects.filter(id__in=emp_ids, organisation=org)
+            if emps.exists():
+                complaint.assigned_employees.set(emps)
+                
+            return Response({"message": "Employees assigned successfully to complaint"})
+
+        if action == "generate_ai_summary":
+            from .service import summarize_organisation_complaints
+            
+            # Take up to 50 recent complaints for analysis to avoid huge context sizes
+            recent_complaints = Complaint.objects.filter(organisation=org).order_by("-created_at")[:50]
+            complaints_texts = [
+                f"Status: {c.status}, Severity: {c.severity}, Dept: {c.department.name if c.department else 'None'}, Desc: {c.description}" 
+                for c in recent_complaints
+            ]
+            
+            if not complaints_texts:
+                return Response({"summary": "No recent complaints found to summarize.", "key_issues": []})
+                
+            ai_data = summarize_organisation_complaints(complaints_texts, org.name)
+            return Response(ai_data)
 
         return Response({"error": "Invalid action"}, status=400)
 

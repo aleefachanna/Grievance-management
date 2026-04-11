@@ -120,10 +120,12 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
     organisation = serializers.CharField(source="organisation.name", read_only=True)
     department = serializers.CharField(source="department.name", read_only=True)
     updates = ComplaintUpdateSerializer(many=True, read_only=True)
+    assigned_employees = serializers.SerializerMethodField()
 
     class Meta:
         model = Complaint
         fields = [
+            "id",
             "complaint_id",
             "organisation",
             "department",
@@ -132,12 +134,22 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
             "status",
             "attachment",
             "deadline",
-            "ai_summary",      # safe if exists
+            "ai_summary",
             "created_at",
             "closed_at",
             "updates",
+            "assigned_employees",
         ]
         read_only_fields = fields
+
+    def get_assigned_employees(self, obj):
+        return [
+            {
+                "id": str(e.id), 
+                "name": f"{e.user.first_name} {e.user.last_name}".strip() or e.user.username
+            } 
+            for e in obj.assigned_employees.all()
+        ]
 
 
 # =========================================================

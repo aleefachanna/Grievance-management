@@ -6,7 +6,8 @@ from .department import (
     DepartmentAnalyzeView, 
     DepartmentWorkViewSet,
     DepartmentComplaintViewSet,
-    DepartmentDashboardView)
+    DepartmentDashboardView,
+    AIEmployeeAssignView)
 from .views import (
     get_organisation,
     search_organisations,
@@ -46,6 +47,7 @@ urlpatterns = [
     path('department/login/', LoginView.as_view()),
     path("department/dashboard/", DepartmentDashboardView.as_view()),
     path("department/ai/assign/", AIAssignView.as_view()),
+    path("department/ai/assign_employees/", AIEmployeeAssignView.as_view()),
     path("department/analyze/", DepartmentAnalyzeView.as_view()),
 
     # ---------------- Manager Dashboard ----------------
