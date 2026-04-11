@@ -328,7 +328,7 @@ function ManagerDash() {
                                     onMouseOver={(e) => e.target.style.transform = "translateY(-2px)"}
                                     onMouseOut={(e) => e.target.style.transform = "translateY(0)"}
                                 >
-                                    {aiAssignLoading ? "AI Processing..." : "✨ AI Auto-Assign Staff"}
+                                    {aiAssignLoading ? "AI Processing..." : "✨ AI Auto-Assign"}
                                 </button>
                             </div>
                             <div className="complaint-grid" style={{ gridTemplateColumns: "1fr" }}>
