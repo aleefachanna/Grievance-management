@@ -6,17 +6,24 @@ from django.conf import settings
 # Make sure "GROQ_KEY" matches the name in your .env file
 client = Groq(api_key=os.environ.get("GROQ_KEY"))
 
-def classify_and_summarize(complaint_text, department_list, attachment_type=None, attachment_data=None):
+def classify_and_summarize(complaint_text, department_info, attachment_type=None, attachment_data=None, severity_guidelines=None):
     """
     Sends complaint to Groq to get departments, summary, and severity.
     Handles text or image attachment via LLaVA model.
+    Uses organisation guidelines to constrain severity ratings.
     """
+
+    # Extract name and description pairs
+    dept_strings = [f"{d['name']} (Description: {d.get('description', 'No description')})" for d in department_info]
+    dept_list_str = "\n".join(f"- {d}" for d in dept_strings)
+    
+    guideline_text = f"Severity Constraints for this Organisation:\n{severity_guidelines}\n" if severity_guidelines else "Evaluate severity purely objectively."
 
     prompt = f"""
 You are a complaint triage assistant for an organization.
 
-Available Departments:
-{", ".join(department_list)}
+Available Departments and their roles:
+{dept_list_str}
 
 Severity Scale:
 0 = None / Not an issue  
@@ -25,6 +32,9 @@ Severity Scale:
 3 = Medium  
 4 = High  
 5 = Critical  
+
+{guideline_text}
+CRITICAL: Do NOT default all complaints to High. You MUST follow the Severity Constraints defined above, adjusting your perspective to match the organisation's specified interpretation of 'Critical', 'Medium', 'Low', etc.
 
 Complaint:
 "{complaint_text}"
@@ -44,9 +54,9 @@ Instructions:
 }}
 
 Rules:
-- Departments must come only from the provided list.
-- Always return an array for "departments".
-- Severity must be a STRING between "0" and "5".
+- Departments MUST be selected only from the names of the departments provided above. Return ONLY the names, not the descriptions.
+- Always return an array of strings for "departments".
+- Severity must be a STRING between "0" and "5". Adhere strictly to the organisation guidelines.
 """
 
     if attachment_type == "text" and attachment_data:
@@ -255,3 +265,72 @@ def ai_assign_employees(complaints, employees_data):
     except Exception as e:
         print(f"Groq API Error in employee assignment: {e}")
         return {"mapping": {}}
+
+
+def ai_auto_manage_works(active_works, unassigned_complaints):
+    works_data = "\n".join([f"WORK_ID {w.id}: {w.title} - {w.description}" for w in active_works])
+    complaints_data = "\n".join([f"COMPLAINT_ID {c.id}: {c.description}" for c in unassigned_complaints])
+
+    prompt = f"""
+    You are an AI department manager.
+    Your job is to manage unassigned complaints by either assigning them to Existing Works, or grouping them into New Works.
+    
+    Active Existing Works:
+    {works_data if works_data else "None"}
+    
+    Unassigned Pending Complaints:
+    {complaints_data if complaints_data else "None"}
+    
+    Instructions:
+    1. First, try to map complaints to Existing Works if they are highly related.
+    2. For complaints that don't fit any Existing Work, group them together, suggest a concise title and description, and create New Works.
+    3. Output in the following EXACT JSON format:
+    {{
+      "assign_to_existing": [
+        {{
+           "work_id": "WORK_ID_HERE",
+           "complaint_ids": ["uuid-1", "uuid-2"]
+        }}
+      ],
+      "create_new": [
+        {{
+           "title": "Title of new work",
+           "description": "Detailed description of the new manual workload",
+           "complaint_ids": ["uuid-3"]
+        }}
+      ]
+    }}
+    """
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}, 
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        print(f"Groq API Error in Auto Manage Works: {e}")
+        return {"assign_to_existing": [], "create_new": []}
+
+def ai_draft_resolution_email(complaint_desc, department_name):
+    prompt = f"""
+    You are an automated department manager communicating directly with a resident.
+    Department: {department_name}
+    Grievance Description: {complaint_desc}
+    
+    Instructions:
+    Draft a polite, professional 2-3 sentence email stating that their grievance has been fully resolved and marked as closed by the department.
+    Do not include salutations like "Hi," or signatures like "Best Regards," as the system handles those wrappers.
+    Output ONLY JSON in the exact format:
+    {{ "draft": "Your email draft goes here..." }}
+    """
+    try:
+        res = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"}, 
+        )
+        return json.loads(res.choices[0].message.content).get("draft", "Your grievance has been successfully resolved.")
+    except Exception as e:
+        print(f"Groq API Error in Email Draft: {e}")
+        return "Your grievance has been successfully resolved."

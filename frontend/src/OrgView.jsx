@@ -61,6 +61,28 @@ function OrgView() {
         <span>←</span> Back to Search
       </button>
 
+      {/* Action Bar */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          onClick={() => navigate(`/submit?orgId=${org.id}`)}
+          style={{
+            background: 'linear-gradient(45deg, #a855f7, #ec4899)',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(236, 72, 153, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+          onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+        >
+          📝 Submit a Complaint Here
+        </button>
+      </div>
+
       {/* Organisation Profile Card */}
       <div style={{
         background: '#fff',

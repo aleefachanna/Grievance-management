@@ -202,7 +202,7 @@ class SubmitComplaintView(APIView):
         )
 
         dept_queryset = Department.objects.filter(organisation=organisation)
-        dept_names = list(dept_queryset.values_list("name", flat=True))
+        dept_info = list(dept_queryset.values("name", "description"))
 
         attachment_type = None
         attachment_data = None
@@ -222,7 +222,13 @@ class SubmitComplaintView(APIView):
         ai_status = "success"
 
         try:
-            ai_result = classify_and_summarize(description, dept_names, attachment_type, attachment_data)
+            ai_result = classify_and_summarize(
+                description, 
+                dept_info, 
+                attachment_type, 
+                attachment_data, 
+                severity_guidelines=organisation.description
+            )
 
             summary = ai_result.get("summary", "")
             severity = str(ai_result.get("severity", "0"))
@@ -309,12 +315,13 @@ class ManagerDashboardView(APIView):
 
         return Response({
             "organisation": org.name,
+            "organisation_description": org.description,
             "stats": {
                 "total_complaints": complaints.count(),
                 "pending_complaints": complaints.exclude(status="CLOSED").count(),
                 "total_departments": departments.count()
             },
-            "departments": [{"id": str(d.id), "name": d.name} for d in departments],
+            "departments": [{"id": str(d.id), "name": d.name, "description": d.description} for d in departments],
             "complaints": ComplaintDetailSerializer(complaints, many=True).data,
             "works": DepartmentWorkSerializer(works, many=True).data
         })
@@ -387,6 +394,12 @@ class ManagerDashboardView(APIView):
                 
             ai_data = summarize_organisation_complaints(complaints_texts, org.name)
             return Response(ai_data)
+
+        if action == "update_org_description":
+            desc = request.data.get("description", "")
+            org.description = desc
+            org.save()
+            return Response({"message": "Organisation description updated successfully."})
 
         return Response({"error": "Invalid action"}, status=400)
 
@@ -621,7 +634,9 @@ class EmployeeManagerView(APIView):
         if User.objects.filter(username=email).exists():
             return Response({"error": "User with this email already exists"}, status=400)
             
-        temp_password = secrets.token_urlsafe(8)
+        temp_password = data.get("password")
+        if not temp_password:
+            return Response({"error": "Password is required"}, status=400)
         
         user = User.objects.create(
             username=email,
@@ -643,8 +658,7 @@ class EmployeeManagerView(APIView):
         return Response({
             "message": "Employee created successfully",
             "employee_id": emp.employee_id,
-            "email": user.email,
-            "password": temp_password
+            "email": user.email
         }, status=201)
 
 class AIManagerEmployeeAssignView(APIView):

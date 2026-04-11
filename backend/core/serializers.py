@@ -139,8 +139,12 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
             "closed_at",
             "updates",
             "assigned_employees",
+            "works"
         ]
         read_only_fields = fields
+
+    def get_works(self, obj):
+        return [{"id": str(w.id), "title": w.title} for w in obj.works.all()]
 
     def get_assigned_employees(self, obj):
         return [

@@ -23,4 +23,15 @@ pApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+pApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 403 && error.response.data.detail?.includes('Access Denied')) {
+       localStorage.clear();
+       window.location.href = '/department/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api; // This allows "import api from './api'" to work

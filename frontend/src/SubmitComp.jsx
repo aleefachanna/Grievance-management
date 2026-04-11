@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from './api';
 import './style.css';
 
@@ -15,6 +15,9 @@ const SubmitGrievance = () => {
   const [error, setError] = useState('');
   const [successId, setSuccessId] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const presetOrgId = queryParams.get('orgId');
 
   useEffect(() => {
     // Fetch organisations for the dropdown
@@ -27,7 +30,11 @@ const SubmitGrievance = () => {
       }
     };
     fetchOrgs();
-  }, []);
+
+    if (presetOrgId) {
+      setFormData(prev => ({ ...prev, organisation: presetOrgId }));
+    }
+  }, [presetOrgId]);
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -123,6 +130,8 @@ const SubmitGrievance = () => {
                 value={formData.organisation}
                 onChange={(e) => setFormData({ ...formData, organisation: e.target.value })}
                 required
+                disabled={!!presetOrgId}
+                style={presetOrgId ? { background: "#e8ecef", color: "#666", cursor: "not-allowed" } : {}}
               >
                 <option value="">-- Choose Organisation --</option>
                 {organisations.map(org => (

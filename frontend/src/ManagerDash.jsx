@@ -18,20 +18,26 @@ function ManagerDash() {
     const [newDeptDesc, setNewDeptDesc] = useState("");
 
     const [newEmpEmail, setNewEmpEmail] = useState("");
-    const [newEmpName, setNewEmpName] = useState("");
     const [newEmpDept, setNewEmpDept] = useState("");
     const [newEmpHod, setNewEmpHod] = useState(false);
-    
+    const [newEmpPassword, setNewEmpPassword] = useState("");
+
     const [createdEmpInfo, setCreatedEmpInfo] = useState(null);
 
     const [aiSummary, setAiSummary] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
-    const [aiAssignLoading, setAiAssignLoading] = useState(false);
+    const [orgDescription, setOrgDescription] = useState("");
+
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
 
     const fetchData = async () => {
         try {
             const res = await pApi.get("/dashboard/manager/");
             setData(res.data);
+            if (res.data.organisation_description) {
+                setOrgDescription(res.data.organisation_description);
+            }
 
             const deptRes = await pApi.get("/manager/departments/");
             setDepartments(deptRes.data);
@@ -112,6 +118,35 @@ function ManagerDash() {
         }
     };
 
+    const handleUpdateSettings = async (e) => {
+        e.preventDefault();
+        try {
+            await pApi.post("/dashboard/manager/", {
+                action: "update_org_description",
+                description: orgDescription
+            });
+            alert("Settings saved successfully!");
+            fetchData();
+        } catch (error) {
+            alert(error.response?.data?.error || "Error updating settings");
+        }
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        try {
+            await pApi.post("/department/change_password/", {
+                old_password: oldPassword,
+                new_password: newPassword
+            });
+            alert("Password updated successfully!");
+            setOldPassword("");
+            setNewPassword("");
+        } catch (error) {
+            alert(error.response?.data?.error || "Error changing password");
+        }
+    };
+
     const handleCreateDept = async (e) => {
         e.preventDefault();
         try {
@@ -135,13 +170,15 @@ function ManagerDash() {
                 email: newEmpEmail,
                 name: newEmpName,
                 department_id: newEmpDept,
-                is_hod: newEmpHod
+                is_hod: newEmpHod,
+                password: newEmpPassword
             });
             setNewEmpEmail("");
             setNewEmpName("");
             setNewEmpDept("");
             setNewEmpHod(false);
-            setCreatedEmpInfo({ id: res.data.employee_id, tempPassword: res.data.password, email: res.data.email });
+            setNewEmpPassword("");
+            setCreatedEmpInfo({ id: res.data.employee_id, email: res.data.email });
             fetchData();
         } catch (error) {
             alert(error.response?.data?.error || "Error creating employee");
@@ -160,6 +197,7 @@ function ManagerDash() {
                     <button className={activeTab === 'complaints' ? 'active' : ''} onClick={() => setActiveTab('complaints')}>Complaints</button>
                     <button className={activeTab === 'departments' ? 'active' : ''} onClick={() => setActiveTab('departments')}>Departments</button>
                     <button className={activeTab === 'employees' ? 'active' : ''} onClick={() => setActiveTab('employees')}>Employees</button>
+                    <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>Org/AI Settings</button>
                 </nav>
                 <div style={{ marginTop: "auto" }}>
                     <button onClick={handleLogout} style={{ width: "100%", padding: "12px", background: "rgba(231, 76, 60, 0.9)", color: "white", border: "1px solid rgba(231, 76, 60, 0.3)", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s ease" }} onMouseOver={(e) => e.target.style.background = "#c0392b"} onMouseOut={(e) => e.target.style.background = "rgba(231, 76, 60, 0.9)"}>
@@ -425,6 +463,7 @@ function ManagerDash() {
                                 <form onSubmit={handleCreateEmp} style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap", alignItems: "center" }}>
                                     <input type="text" placeholder="Full Name" value={newEmpName} onChange={e => setNewEmpName(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <input type="email" placeholder="Email" value={newEmpEmail} onChange={e => setNewEmpEmail(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
+                                    <input type="password" placeholder="Password" value={newEmpPassword} onChange={e => setNewEmpPassword(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <select value={newEmpDept} onChange={e => setNewEmpDept(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }}>
                                         <option value="" disabled>Select Department</option>
                                         {departments.map(d => (
@@ -442,8 +481,7 @@ function ManagerDash() {
                                         <strong>Employee Created Successfully!</strong><br />
                                         <span><strong>ID:</strong> {createdEmpInfo.id}</span><br />
                                         <span><strong>Email:</strong> {createdEmpInfo.email}</span><br />
-                                        <span><strong>Temp Password:</strong> {createdEmpInfo.tempPassword}</span>
-                                        <button type="button" onClick={() => setCreatedEmpInfo(null)} style={{ marginLeft: "15px", background: "transparent", border: "none", color: "#666", cursor: "pointer", textDecoration: "underline" }}>Dismiss</button>
+                                        <button type="button" onClick={() => setCreatedEmpInfo(null)} style={{ marginLeft: "0", marginTop: "10px", background: "transparent", border: "none", color: "#666", cursor: "pointer", textDecoration: "underline" }}>Dismiss</button>
                                     </div>
                                 )}
                             </div>
@@ -464,6 +502,35 @@ function ManagerDash() {
                                     {employees.length === 0 && <tr><td colSpan="6">No employees created yet.</td></tr>}
                                 </tbody>
                             </table>
+                        </section>
+                    )}
+
+                    {activeTab === "settings" && (
+                        <section>
+                            <h3>Organisation & AI Settings</h3>
+                            <div style={{ marginBottom: "20px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
+                                <h4>Change Password</h4>
+                                <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px" }}>
+                                    <input type="password" placeholder="Old Password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required style={{ padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
+                                    <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required style={{ padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
+                                    <button type="submit" className="submit-button" style={{ alignSelf: "flex-start", margin: 0, padding: "10px 20px" }}>Update Password</button>
+                                </form>
+                            </div>
+                            <div style={{ marginBottom: "20px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
+                                <h4>Organisation Description (AI Context)</h4>
+                                <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "15px" }}>
+                                    This text is used to describe the organisation to the public, and is also passed to the AI to understand the context of the organisation to correctly evaluate the severity of complaints. Mention what your organisation does, and clarify what kind of complaints warrant a "Critical (5)" or "Low (2)" severity.
+                                </p>
+                                <form onSubmit={handleUpdateSettings} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                    <textarea
+                                        value={orgDescription}
+                                        onChange={(e) => setOrgDescription(e.target.value)}
+                                        placeholder="We are a local government body. Critical issues involve public safety hazards. Non-urgent issues are Medium severity..."
+                                        style={{ minHeight: "150px", width: "100%", padding: "12px", borderRadius: "6px", border: "1px solid #d1d5db", fontFamily: "inherit" }}
+                                    />
+                                    <button type="submit" className="submit-button" style={{ alignSelf: "flex-start", margin: 0, padding: "10px 20px" }}>Save Settings</button>
+                                </form>
+                            </div>
                         </section>
                     )}
                 </div>
