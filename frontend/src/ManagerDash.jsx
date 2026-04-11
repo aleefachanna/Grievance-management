@@ -277,8 +277,8 @@ function ManagerDash() {
                                     <h4 style={{ margin: 0, color: '#2c3e50', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <span style={{ fontSize: '1.5rem' }}>✨</span> AI Complaints Summary
                                     </h4>
-                                    <button 
-                                        onClick={handleGenerateSummary} 
+                                    <button
+                                        onClick={handleGenerateSummary}
                                         disabled={loadingSummary}
                                         style={{ background: '#8e44ad', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loadingSummary ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
                                     >
@@ -311,16 +311,16 @@ function ManagerDash() {
                         <section>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                                 <h3 style={{ margin: 0 }}>Organisation Complaints</h3>
-                                <button 
-                                    onClick={runAIAutoAssign} 
+                                <button
+                                    onClick={runAIAutoAssign}
                                     disabled={aiAssignLoading}
-                                    style={{ 
-                                        padding: "10px 20px", 
-                                        background: "linear-gradient(45deg, #a855f7, #ec4899)", 
-                                        color: "white", 
-                                        border: "none", 
-                                        borderRadius: "8px", 
-                                        cursor: "pointer", 
+                                    style={{
+                                        padding: "10px 20px",
+                                        background: "linear-gradient(45deg, #a855f7, #ec4899)",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "8px",
+                                        cursor: "pointer",
                                         fontWeight: "bold",
                                         boxShadow: "0 4px 15px rgba(236, 72, 153, 0.3)",
                                         transition: "all 0.3s ease"
@@ -337,10 +337,10 @@ function ManagerDash() {
                                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", alignItems: "center" }}>
                                             <strong>{index + 1}. ID: {c.complaint_id}</strong>
                                             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                                                <span style={{ 
-                                                    padding: "4px 10px", 
-                                                    borderRadius: "12px", 
-                                                    fontSize: "0.8rem", 
+                                                <span style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    fontSize: "0.8rem",
                                                     fontWeight: "bold",
                                                     background: c.severity === "5" ? "#ffebee" : c.severity === "4" ? "#fff3e0" : c.severity === "3" ? "#fff8e1" : "#f5f5f5",
                                                     color: c.severity === "5" ? "#c62828" : c.severity === "4" ? "#ef6c00" : c.severity === "3" ? "#f57f17" : "#616161",
@@ -358,27 +358,27 @@ function ManagerDash() {
                                                 <span><strong>Assignee:</strong> {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
                                             </div>
                                             <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-                                            <select
-                                                onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
-                                                style={{ padding: "5px", borderRadius: "4px" }}
-                                                value=""
-                                            >
-                                                <option value="" disabled>Reassign To Dept...</option>
-                                                {departments.map(d => (
-                                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                                ))}
-                                            </select>
-                                            <select
-                                                onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
-                                                style={{ padding: "5px", borderRadius: "4px" }}
-                                                value=""
-                                                disabled={!c.department}
-                                            >
-                                                <option value="" disabled>Assign Employee...</option>
-                                                {employees.filter(emp => emp.department === c.department).map(emp => (
-                                                    <option key={emp.id} value={emp.id}>{emp.name}</option>
-                                                ))}
-                                            </select>
+                                                <select
+                                                    onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
+                                                    style={{ padding: "5px", borderRadius: "4px" }}
+                                                    value=""
+                                                >
+                                                    <option value="" disabled>Reassign To Dept...</option>
+                                                    {departments.map(d => (
+                                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
+                                                    style={{ padding: "5px", borderRadius: "4px" }}
+                                                    value=""
+                                                    disabled={!c.department}
+                                                >
+                                                    <option value="" disabled>Assign Employee...</option>
+                                                    {employees.filter(emp => emp.department === c.department).map(emp => (
+                                                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -391,9 +391,9 @@ function ManagerDash() {
                     {activeTab === "departments" && (
                         <section>
                             <h3>Manage Departments</h3>
-                            <div style={{ marginBottom: "20px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
+                            <div style={{ marginBottom: "30px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8", marginTop: "20px" }}>
                                 <h4>Create New Department</h4>
-                                <form onSubmit={handleCreateDept} style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" }}>
+                                <form onSubmit={handleCreateDept} style={{ display: "flex", gap: "10px", marginTop: "20px", alignItems: "center" }}>
                                     <input type="text" placeholder="Department Name" value={newDeptName} onChange={e => setNewDeptName(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <input type="text" placeholder="Description (Optional)" value={newDeptDesc} onChange={e => setNewDeptDesc(e.target.value)} style={{ flex: 1, padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <button type="submit" className="submit-button" style={{ margin: 0, padding: "10px 20px" }}>Create</button>
