@@ -30,35 +30,32 @@ const SubmitGrievance = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      const selectedOrg = organisations.find(o => o.slug === formData.organisation);
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append('email', formData.email);
+    
+    // formData.organisation now directly contains the ID from the <select>
+    formDataToSend.append('organisation', formData.organisation);
+    formDataToSend.append('description', formData.description);
 
-      const formDataToSend = new FormData();
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('organisation', selectedOrg ? selectedOrg.id : formData.organisation);
-      formDataToSend.append('description', formData.description);
-
-      if (formData.attachment) {
-        formDataToSend.append('attachment', formData.attachment);
-      }
-
-      const response = await api.post("/complaint/submit/", formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setSuccessId(response.data.complaint_id);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to submit grievance");
-    } finally {
-      setLoading(false);
+    if (formData.attachment) {
+      formDataToSend.append('attachment', formData.attachment);
     }
-  };
 
+    const response = await api.post("/complaint/submit/", formDataToSend, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    setSuccessId(response.data.complaint_id);
+  } catch (err) {
+    setError(err.response?.data?.error || "Failed to submit grievance");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="resolve-wrapper">
       <div className="resolve-card">
@@ -129,7 +126,10 @@ const SubmitGrievance = () => {
               >
                 <option value="">-- Choose Organisation --</option>
                 {organisations.map(org => (
-                  <option key={org.slug} value={org.slug}>{org.name}</option>
+                  /* Use org.id as the value instead of org.slug */
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
                 ))}
               </select>
             </div>

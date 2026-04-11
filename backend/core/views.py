@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import status
 
+import base64
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -192,20 +193,36 @@ class SubmitComplaintView(APIView):
         description = serializer.validated_data["description"]
         email = request.data.get("email")
 
+        attachment = request.FILES.get("attachment")
         complaint = Complaint.objects.create(
             organisation=organisation,
             description=description,
             user_email=email,
-            attachment=request.FILES.get("attachment")
+            attachment=attachment
         )
 
         dept_queryset = Department.objects.filter(organisation=organisation)
         dept_names = list(dept_queryset.values_list("name", flat=True))
 
+        attachment_type = None
+        attachment_data = None
+        if attachment:
+            try:
+                attachment.seek(0)
+                content_type = attachment.content_type
+                if content_type and content_type.startswith('image/'):
+                    attachment_data = base64.b64encode(attachment.read()).decode('utf-8')
+                    attachment_type = "image"
+                elif content_type and content_type.startswith('text/'):
+                    attachment_data = attachment.read().decode('utf-8', errors='ignore')
+                    attachment_type = "text"
+            except Exception as e:
+                print(f"Error processing attachment: {e}")
+
         ai_status = "success"
 
         try:
-            ai_result = classify_and_summarize(description, dept_names)
+            ai_result = classify_and_summarize(description, dept_names, attachment_type, attachment_data)
 
             summary = ai_result.get("summary", "")
             severity = str(ai_result.get("severity", "0"))

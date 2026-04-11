@@ -6,9 +6,10 @@ from django.conf import settings
 # Make sure "GROQ_KEY" matches the name in your .env file
 client = Groq(api_key=os.environ.get("GROQ_KEY"))
 
-def classify_and_summarize(complaint_text, department_list):
+def classify_and_summarize(complaint_text, department_list, attachment_type=None, attachment_data=None):
     """
     Sends complaint to Groq to get departments, summary, and severity.
+    Handles text or image attachment via LLaVA model.
     """
 
     prompt = f"""
@@ -48,13 +49,57 @@ Rules:
 - Severity must be a STRING between "0" and "5".
 """
 
-    chat_completion = client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        response_format={"type": "json_object"},
-    )
+    if attachment_type == "text" and attachment_data:
+        prompt += f"\n\nAttachment Text:\n{attachment_data}"
 
-    return json.loads(chat_completion.choices[0].message.content)
+    messages = []
+    model_name = "llama-3.3-70b-versatile"
+    kwargs = {"response_format": {"type": "json_object"}}
+
+    if attachment_type == "image" and attachment_data:
+        model_name = "llama-3.2-11b-vision-preview"
+        # Vision model compatibility
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{attachment_data}"}
+                    }
+                ]
+            }
+        ]
+        # Some vision models on Groq might not fully support structured JSON mode
+        # removing response_format constraint if it causes issues, but we'll try strict json format.
+    else:
+        messages = [{"role": "user", "content": prompt}]
+
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=messages,
+            model=model_name,
+            **kwargs,
+        )
+        response_text = chat_completion.choices[0].message.content
+        return json.loads(response_text)
+    except Exception as e:
+        # Fallback if json_object format is not supported by vision model
+        if attachment_type == "image" and "json_object" in str(e):
+            chat_completion = client.chat.completions.create(
+                messages=messages,
+                model=model_name,
+            )
+            response_text = chat_completion.choices[0].message.content
+            # Best effort to find JSON in response
+            start = response_text.find('{')
+            end = response_text.rfind('}')
+            if start != -1 and end != -1:
+                return json.loads(response_text[start:end+1])
+            raise e
+        else:
+            raise e
 
 def summarize_department_work(complaints_texts, department_name):
     combined_text = "\n".join(

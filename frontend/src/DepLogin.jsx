@@ -4,7 +4,7 @@ import api from './api';
 import './style.css';
 
 function DepLogin() {
-  const [email, setEmail] = useState("");
+  const [empid, setEmpid] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [firstLogin, setFirstLogin] = useState(false);
@@ -15,7 +15,7 @@ function DepLogin() {
     e.preventDefault();
     try {
       const response = await api.post("/department/login/", {
-        email,
+        empid,
         password,
         new_password: firstLogin ? newPassword : undefined,
       });
@@ -62,13 +62,13 @@ function DepLogin() {
 
         <form onSubmit={handleLogin}>
           <div className="resolve-input-group">
-            <label className="resolve-label">Email</label>
+            <label className="resolve-label">Employee ID</label>
             <input
-              type="email"
+              type="text"
               className="resolve-input"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="EMP-ORG-XXXX"
+              value={empid}
+              onChange={(e) => setEmpid(e.target.value)}
               required
             />
           </div>

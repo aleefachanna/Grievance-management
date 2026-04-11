@@ -212,19 +212,19 @@ class LoginView(APIView):
 
     def post(self, request):
 
-        email = request.data.get("email")
+        empid = request.data.get("empid")
         password = request.data.get("password")
 
-        if not email or not password:
+        if not empid or not password:
             return Response(
-                {"error": "Email and password are required."},
+                {"error": "Employee ID and password are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
             employee = Employee.objects.select_related(
                 "user", "organisation"
-            ).get(user__email__iexact=email)
+            ).get(employee_id__iexact=empid)
 
             if not employee.user.check_password(password):
                 print("PASSWORD WRONG")

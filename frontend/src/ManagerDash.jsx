@@ -19,6 +19,8 @@ function ManagerDash() {
     const [newEmpName, setNewEmpName] = useState("");
     const [newEmpDept, setNewEmpDept] = useState("");
     const [newEmpHod, setNewEmpHod] = useState(false);
+    
+    const [createdEmpInfo, setCreatedEmpInfo] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -86,8 +88,8 @@ function ManagerDash() {
             setNewEmpName("");
             setNewEmpDept("");
             setNewEmpHod(false);
+            setCreatedEmpInfo({ id: res.data.employee_id, tempPassword: res.data.password, email: res.data.email });
             fetchData();
-            alert(`Employee created!\nID: ${res.data.employee_id}\nTemp Password: ${res.data.password}`);
         } catch (error) {
             alert(error.response?.data?.error || "Error creating employee");
         }
@@ -254,6 +256,15 @@ function ManagerDash() {
                                     </label>
                                     <button type="submit" className="submit-button" style={{ margin: 0, padding: "10px 20px" }}>Add Employee</button>
                                 </form>
+                                {createdEmpInfo && (
+                                    <div style={{ marginTop: "15px", padding: "10px 15px", background: "#e8f5e9", borderLeft: "4px solid #4caf50", borderRadius: "4px" }}>
+                                        <strong>Employee Created Successfully!</strong><br />
+                                        <span><strong>ID:</strong> {createdEmpInfo.id}</span><br />
+                                        <span><strong>Email:</strong> {createdEmpInfo.email}</span><br />
+                                        <span><strong>Temp Password:</strong> {createdEmpInfo.tempPassword}</span>
+                                        <button type="button" onClick={() => setCreatedEmpInfo(null)} style={{ marginLeft: "15px", background: "transparent", border: "none", color: "#666", cursor: "pointer", textDecoration: "underline" }}>Dismiss</button>
+                                    </div>
+                                )}
                             </div>
 
                             <table className="data-table">
