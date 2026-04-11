@@ -6,7 +6,8 @@ from .department import (
     DepartmentAnalyzeView, 
     DepartmentWorkViewSet,
     DepartmentComplaintViewSet,
-    DepartmentDashboardView)
+    DepartmentDashboardView,
+    AIEmployeeAssignView)
 from .views import (
     get_organisation,
     search_organisations,
@@ -18,6 +19,7 @@ from .views import (
     SendOTPView,
     DepartmentManagerView,
     EmployeeManagerView,
+    AIManagerEmployeeAssignView,
 )
 router = DefaultRouter()
 router.register(r"department/complaints", DepartmentComplaintViewSet, basename="dept-complaints")
@@ -46,11 +48,13 @@ urlpatterns = [
     path('department/login/', LoginView.as_view()),
     path("department/dashboard/", DepartmentDashboardView.as_view()),
     path("department/ai/assign/", AIAssignView.as_view()),
+    path("department/ai/assign_employees/", AIEmployeeAssignView.as_view()),
     path("department/analyze/", DepartmentAnalyzeView.as_view()),
 
     # ---------------- Manager Dashboard ----------------
     path('dashboard/manager/', ManagerDashboardView.as_view(), name='manager_dashboard'),
     path('manager/departments/', DepartmentManagerView.as_view(), name='manager_departments'),
     path('manager/employees/', EmployeeManagerView.as_view(), name='manager_employees'),
+    path('manager/ai/assign_employees/', AIManagerEmployeeAssignView.as_view()),
 ]
 urlpatterns += router.urls

@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { pApi } from './api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import './style2.css';
 
 function ManagerDash() {
+    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [departments, setDepartments] = useState([]);
     const [employees, setEmployees] = useState([]);
@@ -21,6 +23,10 @@ function ManagerDash() {
     const [newEmpHod, setNewEmpHod] = useState(false);
     
     const [createdEmpInfo, setCreatedEmpInfo] = useState(null);
+
+    const [aiSummary, setAiSummary] = useState(null);
+    const [loadingSummary, setLoadingSummary] = useState(false);
+    const [aiAssignLoading, setAiAssignLoading] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -44,19 +50,66 @@ function ManagerDash() {
         fetchData();
     }, []);
 
-    const handleReassign = async (complaintId, deptId) => {
-        // Backend expects 'action', 'complaint_id', 'department_id'
-        // Let's grab the actual internal ID of the complaint rather than the string complaint_id
-        const comp = data.complaints.find(c => c.complaint_id === complaintId);
-        if (!comp) return;
+    const handleLogout = () => {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        localStorage.removeItem("role");
+        navigate("/");
+    };
 
-        await pApi.post("/dashboard/manager/", {
-            action: "reassign_complaint",
-            complaint_id: comp.complaint_id,
-            department_id: deptId
-        });
-        alert("Complaint reassigned!");
-        fetchData();
+    const handleReassign = async (complaintId, deptId) => {
+        try {
+            await pApi.post('/dashboard/manager/', {
+                action: 'reassign_complaint',
+                complaint_id: complaintId,
+                department_id: deptId
+            });
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to reassign complaint.");
+        }
+    };
+
+    const handleAssignEmployee = async (complaintId, employeeId) => {
+        try {
+            await pApi.post("/dashboard/manager/", {
+                action: "assign_complaint_employee",
+                complaint_id: complaintId,
+                employee_ids: [employeeId]
+            });
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to assign employee.");
+        }
+    };
+
+    const handleGenerateSummary = async () => {
+        setLoadingSummary(true);
+        try {
+            const res = await pApi.post("/dashboard/manager/", {
+                action: "generate_ai_summary"
+            });
+            setAiSummary(res.data);
+        } catch (error) {
+            alert(error.response?.data?.error || "Failed to generate AI summary");
+        }
+        setLoadingSummary(false);
+    };
+
+    const runAIAutoAssign = async () => {
+        setAiAssignLoading(true);
+        try {
+            const res = await pApi.post("/manager/ai/assign_employees/");
+            alert(res.data.message || "AI Auto-Assignment complete.");
+            fetchData();
+        } catch (error) {
+            console.error(error);
+            alert("AI Assignment failed.");
+        } finally {
+            setAiAssignLoading(false);
+        }
     };
 
     const handleCreateDept = async (e) => {
@@ -108,11 +161,16 @@ function ManagerDash() {
                     <button className={activeTab === 'departments' ? 'active' : ''} onClick={() => setActiveTab('departments')}>Departments</button>
                     <button className={activeTab === 'employees' ? 'active' : ''} onClick={() => setActiveTab('employees')}>Employees</button>
                 </nav>
+                <div style={{ marginTop: "auto" }}>
+                    <button onClick={handleLogout} style={{ width: "100%", padding: "12px", background: "rgba(231, 76, 60, 0.9)", color: "white", border: "1px solid rgba(231, 76, 60, 0.3)", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s ease" }} onMouseOver={(e) => e.target.style.background = "#c0392b"} onMouseOut={(e) => e.target.style.background = "rgba(231, 76, 60, 0.9)"}>
+                        Logout
+                    </button>
+                </div>
             </aside>
 
             <main className="main-viewport">
                 <header className="top-nav">
-                    <div className="stats-header">
+                    <div className="stats-header" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <span><strong>Total Complaints:</strong> {data.stats?.total_complaints || 0}</span>
                         <span><strong>Pending:</strong> {data.stats?.pending_complaints || 0}</span>
                     </div>
@@ -174,33 +232,156 @@ function ManagerDash() {
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
+
+                                {/* Severity Bar Chart */}
+                                <div style={{ flex: '1 1 300px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
+                                    <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Severity</h4>
+                                    <div style={{ height: '300px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart
+                                                data={[
+                                                    { name: 'Critical (5)', total: data.complaints.filter(c => c.severity === '5').length, fill: '#c62828' },
+                                                    { name: 'High (4)', total: data.complaints.filter(c => c.severity === '4').length, fill: '#ef6c00' },
+                                                    { name: 'Medium (3)', total: data.complaints.filter(c => c.severity === '3').length, fill: '#f57f17' },
+                                                    { name: 'Low (2)', total: data.complaints.filter(c => c.severity === '2').length, fill: '#9e9e9e' },
+                                                    { name: 'Very Low (1)', total: data.complaints.filter(c => c.severity === '1').length, fill: '#bdbdbd' },
+                                                    { name: 'None (0)', total: data.complaints.filter(c => !c.severity || c.severity === '0').length, fill: '#eceff1' }
+                                                ].filter(d => d.total > 0)}
+                                                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                                                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                                                <YAxis allowDecimals={false} />
+                                                <Tooltip cursor={{ fill: '#f8f9fa' }} />
+                                                <Bar dataKey="total" radius={[4, 4, 0, 0]} barSize={30}>
+                                                    {
+                                                        [
+                                                            { name: 'Critical (5)', total: data.complaints.filter(c => c.severity === '5').length, fill: '#c62828' },
+                                                            { name: 'High (4)', total: data.complaints.filter(c => c.severity === '4').length, fill: '#ef6c00' },
+                                                            { name: 'Medium (3)', total: data.complaints.filter(c => c.severity === '3').length, fill: '#f57f17' },
+                                                            { name: 'Low (2)', total: data.complaints.filter(c => c.severity === '2').length, fill: '#9e9e9e' },
+                                                            { name: 'Very Low (1)', total: data.complaints.filter(c => c.severity === '1').length, fill: '#bdbdbd' },
+                                                            { name: 'None (0)', total: data.complaints.filter(c => !c.severity || c.severity === '0').length, fill: '#eceff1' }
+                                                        ].filter(d => d.total > 0).map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                        ))
+                                                    }
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* AI Summary Section */}
+                            <div style={{ marginTop: '30px', background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', padding: '25px', borderRadius: '12px', border: '1px solid #dcdde1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <h4 style={{ margin: 0, color: '#2c3e50', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: '1.5rem' }}>✨</span> AI Complaints Summary
+                                    </h4>
+                                    <button
+                                        onClick={handleGenerateSummary}
+                                        disabled={loadingSummary}
+                                        style={{ background: '#8e44ad', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: loadingSummary ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                                    >
+                                        {loadingSummary ? "Generating..." : "Generate Insights"}
+                                    </button>
+                                </div>
+                                {aiSummary ? (
+                                    <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #8e44ad' }}>
+                                        <p style={{ fontSize: '1.05rem', lineHeight: '1.6', color: '#34495e', marginBottom: '15px' }}>{aiSummary.summary}</p>
+                                        <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>Key Recurring Issues:</h5>
+                                        <ul style={{ margin: 0, paddingLeft: '20px', color: '#555' }}>
+                                            {aiSummary.key_issues?.map((issue, idx) => (
+                                                <li key={idx} style={{ marginBottom: '5px' }}>{issue}</li>
+                                            ))}
+                                            {(!aiSummary.key_issues || aiSummary.key_issues.length === 0) && (
+                                                <li>No specific key issues identified.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '20px', color: '#7f8c8d' }}>
+                                        Click the button above to analyze recent complaints using AI and generate an executive summary.
+                                    </div>
+                                )}
                             </div>
                         </section>
                     )}
 
                     {activeTab === "complaints" && (
                         <section>
-                            <h3>Organisation Complaints</h3>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                                <h3 style={{ margin: 0 }}>Organisation Complaints</h3>
+                                <button
+                                    onClick={runAIAutoAssign}
+                                    disabled={aiAssignLoading}
+                                    style={{
+                                        padding: "10px 20px",
+                                        background: "linear-gradient(45deg, #a855f7, #ec4899)",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "8px",
+                                        cursor: "pointer",
+                                        fontWeight: "bold",
+                                        boxShadow: "0 4px 15px rgba(236, 72, 153, 0.3)",
+                                        transition: "all 0.3s ease"
+                                    }}
+                                    onMouseOver={(e) => e.target.style.transform = "translateY(-2px)"}
+                                    onMouseOut={(e) => e.target.style.transform = "translateY(0)"}
+                                >
+                                    {aiAssignLoading ? "AI Processing..." : "✨ AI Auto-Assign"}
+                                </button>
+                            </div>
                             <div className="complaint-grid" style={{ gridTemplateColumns: "1fr" }}>
-                                {data.complaints.map(c => (
+                                {data.complaints.map((c, index) => (
                                     <div key={c.complaint_id} className="complaint-box" style={{ marginBottom: "15px" }}>
-                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                                            <strong>ID: {c.complaint_id}</strong>
-                                            <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", alignItems: "center" }}>
+                                            <strong>{index + 1}. ID: {c.complaint_id}</strong>
+                                            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                                <span style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    fontSize: "0.8rem",
+                                                    fontWeight: "bold",
+                                                    background: c.severity === "5" ? "#ffebee" : c.severity === "4" ? "#fff3e0" : c.severity === "3" ? "#fff8e1" : "#f5f5f5",
+                                                    color: c.severity === "5" ? "#c62828" : c.severity === "4" ? "#ef6c00" : c.severity === "3" ? "#f57f17" : "#616161",
+                                                    border: `1px solid ${c.severity === "5" ? "#ffcdd2" : c.severity === "4" ? "#ffe0b2" : c.severity === "3" ? "#ffecb3" : "#e0e0e0"}`
+                                                }}>
+                                                    Severity: {c.severity || "0"}
+                                                </span>
+                                                <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                                            </div>
                                         </div>
                                         <p>{c.description}</p>
-                                        <div className="box-footer" style={{ marginTop: "10px", justifyContent: "flex-start", gap: "10px", alignItems: "center" }}>
-                                            <span>Current Dept: {c.department || "None"}</span>
-                                            <select
-                                                onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
-                                                style={{ padding: "5px", borderRadius: "4px" }}
-                                                defaultValue=""
-                                            >
-                                                <option value="" disabled>Reassign To...</option>
-                                                {departments.map(d => (
-                                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                                ))}
-                                            </select>
+                                        <div className="box-footer" style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-start" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem", color: "#4b5563" }}>
+                                                <span><strong>Dept:</strong> {c.department || "None"}</span>
+                                                <span><strong>Assignee:</strong> {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
+                                            </div>
+                                            <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                                                <select
+                                                    onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
+                                                    style={{ padding: "5px", borderRadius: "4px" }}
+                                                    value=""
+                                                >
+                                                    <option value="" disabled>Reassign To Dept...</option>
+                                                    {departments.map(d => (
+                                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
+                                                    style={{ padding: "5px", borderRadius: "4px" }}
+                                                    value=""
+                                                    disabled={!c.department}
+                                                >
+                                                    <option value="" disabled>Assign Employee...</option>
+                                                    {employees.filter(emp => emp.department === c.department).map(emp => (
+                                                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -212,9 +393,9 @@ function ManagerDash() {
                     {activeTab === "departments" && (
                         <section>
                             <h3>Manage Departments</h3>
-                            <div style={{ marginBottom: "20px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
+                            <div style={{ marginBottom: "30px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8", marginTop: "20px" }}>
                                 <h4>Create New Department</h4>
-                                <form onSubmit={handleCreateDept} style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" }}>
+                                <form onSubmit={handleCreateDept} style={{ display: "flex", gap: "10px", marginTop: "20px", alignItems: "center" }}>
                                     <input type="text" placeholder="Department Name" value={newDeptName} onChange={e => setNewDeptName(e.target.value)} required style={{ padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <input type="text" placeholder="Description (Optional)" value={newDeptDesc} onChange={e => setNewDeptDesc(e.target.value)} style={{ flex: 1, padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" }} />
                                     <button type="submit" className="submit-button" style={{ margin: 0, padding: "10px 20px" }}>Create</button>

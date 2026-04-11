@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.models import Employee, Complaint, DepartmentWork, ComplaintUpdate
 from core.serializers import ComplaintDetailSerializer, DepartmentWorkSerializer
-from core.service import ai_assign_works, summarize_department_work
+from core.service import ai_assign_works, summarize_department_work, ai_assign_employees
 from core.views import send_email
 
 
@@ -28,6 +28,63 @@ class AIAssignView(APIView):
         result = ai_assign_works(complaints, works)
 
         return Response(result)
+
+
+class AIEmployeeAssignView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        employee = get_object_or_404(Employee, user=request.user)
+
+        if not employee.isHod:
+            return Response({"error": "Only HOD allowed"}, status=403)
+
+        # 1. Get unassigned pending complaints in THIS department
+        unassigned_complaints = Complaint.objects.filter(
+            department=employee.department,
+            assigned_employees__isnull=True,
+            status="PENDING"
+        )
+
+        if not unassigned_complaints.exists():
+            return Response({"message": "No unassigned pending complaints found."})
+
+        # 2. Get all employees in this department and their current 'active' workload
+        from django.db.models import Count, Q
+        dept_employees = Employee.objects.filter(department=employee.department).annotate(
+            active_load=Count(
+                'assigned_complaints', 
+                filter=Q(assigned_complaints__status__in=['PENDING', 'WORKING'])
+            )
+        )
+
+        emp_data = [
+            {"id": str(e.id), "name": e.user.first_name or e.user.username, "count": e.active_load}
+            for e in dept_employees
+        ]
+
+        # 3. Call AI service
+        ai_result = ai_assign_employees(unassigned_complaints, emp_data)
+        mapping = ai_result.get("mapping", {})
+
+        # 4. Apply mapping
+        results = []
+        for complaint_id_str, employee_id_str in mapping.items():
+            try:
+                # Need to handle potential UUID vs database ID depending on how AI returns it
+                # Usually AI will return what we gave it (str(c.id))
+                complaint = Complaint.objects.get(id=complaint_id_str, department=employee.department)
+                target_emp = Employee.objects.get(id=employee_id_str, department=employee.department)
+                
+                complaint.assigned_employees.add(target_emp)
+                results.append(f"Complaint {complaint_id_str} assigned to {target_emp.user.username}")
+            except Exception as e:
+                print(f"Error applying AI assignment for {complaint_id_str}: {e}")
+
+        return Response({
+            "message": "AI Auto-Assignment complete.",
+            "details": results
+        })
 
 
 class DepartmentAnalyzeView(APIView):
@@ -127,9 +184,10 @@ class DepartmentComplaintViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         employee = get_object_or_404(Employee, user=self.request.user)
+        from django.db.models import Q
         return Complaint.objects.filter(
-            department=employee.department
-        ).order_by("-created_at")
+            Q(department=employee.department) | Q(assigned_employees=employee)
+        ).distinct().order_by("-created_at")
 
     def partial_update(self, request, *args, **kwargs):
         complaint = self.get_object()
@@ -181,6 +239,25 @@ class DepartmentComplaintViewSet(viewsets.ModelViewSet):
             is_public=is_public
         )
         return Response({"message": "Update added successfully"})
+
+    @action(detail=True, methods=["post"])
+    def assign(self, request, pk=None):
+        complaint = self.get_object()
+        employee = request.user.employee
+
+        if not employee.isHod:
+            return Response({"error": "Only HOD can assign directly"}, status=403)
+
+        emp_ids = request.data.get("employee_ids", [])
+        if not isinstance(emp_ids, list):
+            emp_ids = [emp_ids]
+            
+        if not emp_ids:
+            return Response({"error": "No employees provided"}, status=400)
+
+        emps = Employee.objects.filter(id__in=emp_ids, department=employee.department)
+        complaint.assigned_employees.set(emps)
+        return Response({"message": "Employees assigned successfully to complaint"})
 class DepartmentDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -188,13 +265,19 @@ class DepartmentDashboardView(APIView):
         employee = get_object_or_404(Employee, user=request.user)
         department = employee.department
 
-        complaints = Complaint.objects.filter(department=department)
-        works = DepartmentWork.objects.filter(department=department)
+        from django.db.models import Q
+        complaints = Complaint.objects.filter(
+            Q(department=department) | Q(assigned_employees=employee)
+        ).distinct()
+        works = DepartmentWork.objects.filter(
+            Q(department=department) | Q(employees=employee)
+        ).distinct()
         employees = Employee.objects.filter(department=department).select_related("user")
 
         return Response({
             "department": department.name,
             "is_hod": employee.isHod,
+            "current_employee_id": str(employee.id),
             "complaints_count": complaints.count(),
             "works_count": works.count(),
             "employees": [

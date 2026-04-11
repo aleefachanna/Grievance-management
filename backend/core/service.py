@@ -140,6 +140,46 @@ Instructions:
 
     return json.loads(chat_completion.choices[0].message.content)
 
+def summarize_organisation_complaints(complaints_texts, org_name):
+    combined_text = "\n".join(
+        [f"- {c}" for c in complaints_texts]
+    )
+
+    prompt = f"""
+You are an executive assistant for an organization.
+
+Organization: {org_name}
+
+Below are recent complaints received:
+
+{combined_text}
+
+Instructions:
+1. Read all complaints.
+2. Provide a high-level executive summary of the current state of grievances.
+3. Identify 2-3 key recurring themes or urgent issues.
+4. Keep the tone professional and analytical.
+5. Return ONLY valid JSON in this format:
+
+{{
+  "summary": "High-level overview paragraph.",
+  "key_issues": [
+     "Issue one",
+     "Issue two"
+  ]
+}}
+"""
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"},
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        print(f"Groq API Error in org summary: {e}")
+        return {"summary": "Unable to generate summary at this time.", "key_issues": []}
+
 def ai_assign_works(complaints, works):
     work_titles = [w.title for w in works]
     # Formatting complaints so the AI sees the ID and the text clearly
@@ -176,4 +216,42 @@ def ai_assign_works(complaints, works):
         return json.loads(chat_completion.choices[0].message.content)
     except Exception as e:
         print(f"Groq API Error in assignment: {e}")
+        return {"mapping": {}}
+
+
+def ai_assign_employees(complaints, employees_data):
+    # employees_data is expected to be a list of dicts: [{'id': 1, 'name': 'John', 'count': 2}]
+    emp_info = "\n".join([f"Employee ID: {e['id']} | Name: {e['name']} | Current Complaints Load: {e['count']}" for e in employees_data])
+    combined_complaints = "\n".join([f"Complaint ID {c.id}: {c.description}" for c in complaints])
+
+    prompt = f"""
+    You are an intelligent organizational workload distributor.
+    
+    Employees available in this department (with their current task loads): 
+    {emp_info}
+
+    Unassigned Pending Complaints:
+    {combined_complaints}
+
+    Instructions:
+    Assign each unassigned complaint to EXACTLY ONE employee ID. 
+    You MUST prioritize assigning work to employees with the lowest 'Current Complaints Load' to perfectly balance the total workloads among the staff.
+
+    Return ONLY JSON in this format:
+    {{
+      "mapping": {{
+         "complaint_id": "employee_id"
+      }}
+    }}
+    """
+
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            response_format={"type": "json_object"},
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        print(f"Groq API Error in employee assignment: {e}")
         return {"mapping": {}}

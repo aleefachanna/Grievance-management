@@ -163,7 +163,7 @@ def seed():
     )
 
     print("Complaints created")
-    print("Seeding completed successfully ✅")
+    print("Seeding completed successfully!")
 
 
 seed()
