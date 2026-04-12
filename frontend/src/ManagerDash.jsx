@@ -21,6 +21,9 @@ function ManagerDash() {
     const [newEmpDept, setNewEmpDept] = useState("");
     const [newEmpHod, setNewEmpHod] = useState(false);
     const [newEmpPassword, setNewEmpPassword] = useState("");
+    const [newEmpName, setNewEmpName] = useState("");
+    const [aiAssignLoading, setAiAssignLoading] = useState(false);
+    const [complaintTab, setComplaintTab] = useState("pending");
 
     const [createdEmpInfo, setCreatedEmpInfo] = useState(null);
 
@@ -226,7 +229,7 @@ function ManagerDash() {
                                 <div style={{ flex: '1 1 300px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
                                     <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Status</h4>
                                     <div style={{ height: '300px' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                             <PieChart>
                                                 <Pie
                                                     data={[
@@ -253,7 +256,7 @@ function ManagerDash() {
                                 <div style={{ flex: '2 1 400px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
                                     <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Department</h4>
                                     <div style={{ height: '300px' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                             <BarChart
                                                 data={departments.map(d => ({
                                                     name: d.name.substring(0, 15) + (d.name.length > 15 ? '...' : ''),
@@ -275,7 +278,7 @@ function ManagerDash() {
                                 <div style={{ flex: '1 1 300px', background: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #eee' }}>
                                     <h4 style={{ textAlign: 'center', margin: '0 0 20px 0', color: '#2c3e50' }}>Complaints by Severity</h4>
                                     <div style={{ height: '300px' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                             <BarChart
                                                 data={[
                                                     { name: 'Critical (5)', total: data.complaints.filter(c => c.severity === '5').length, fill: '#c62828' },
@@ -348,9 +351,41 @@ function ManagerDash() {
                     )}
 
                     {activeTab === "complaints" && (
-                        <section>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                                <h3 style={{ margin: 0 }}>Organisation Complaints</h3>
+                        <section style={{ animation: "fadeIn 0.3s ease-in-out" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "15px" }}>
+                                <h3 style={{ margin: 0, color: '#2c3e50', fontSize: '1.5rem' }}>Organisation Complaints</h3>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        onClick={() => setComplaintTab('pending')}
+                                        style={{
+                                            padding: "8px 16px",
+                                            background: complaintTab === 'pending' ? "#3498db" : "#ecf0f1",
+                                            color: complaintTab === 'pending' ? "white" : "#34495e",
+                                            border: "none",
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        Pending / Active
+                                    </button>
+                                    <button
+                                        onClick={() => setComplaintTab('completed')}
+                                        style={{
+                                            padding: "8px 16px",
+                                            background: complaintTab === 'completed' ? "#2ecc71" : "#ecf0f1",
+                                            color: complaintTab === 'completed' ? "white" : "#34495e",
+                                            border: "none",
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        Completed
+                                    </button>
+                                </div>
                                 <button
                                     onClick={runAIAutoAssign}
                                     disabled={aiAssignLoading}
@@ -371,59 +406,77 @@ function ManagerDash() {
                                     {aiAssignLoading ? "AI Processing..." : "✨ AI Auto-Assign"}
                                 </button>
                             </div>
-                            <div className="complaint-grid" style={{ gridTemplateColumns: "1fr" }}>
-                                {data.complaints.map((c, index) => (
-                                    <div key={c.complaint_id} className="complaint-box" style={{ marginBottom: "15px" }}>
-                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", alignItems: "center" }}>
-                                            <strong>{index + 1}. ID: {c.complaint_id}</strong>
+                            <div className="complaint-grid" style={{ gridTemplateColumns: "1fr", gap: "20px" }}>
+                                {data.complaints
+                                    .filter(c => complaintTab === 'pending' ? c.status !== 'CLOSED' : c.status === 'CLOSED')
+                                    .map((c, index) => (
+                                    <div key={c.complaint_id} className="complaint-box" style={{ 
+                                        marginBottom: "0", 
+                                        background: "#fff", 
+                                        borderRadius: "12px", 
+                                        padding: "20px", 
+                                        boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                                        borderLeft: `5px solid ${c.severity === "5" ? "#c62828" : c.severity === "4" ? "#ef6c00" : c.severity === "3" ? "#f57f17" : "#3498db"}`
+                                    }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                                            <strong style={{ fontSize: "1.1rem", color: "#2c3e50" }}>ID: {c.complaint_id}</strong>
                                             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                                                 <span style={{
-                                                    padding: "4px 10px",
-                                                    borderRadius: "12px",
-                                                    fontSize: "0.8rem",
+                                                    padding: "6px 12px",
+                                                    borderRadius: "20px",
+                                                    fontSize: "0.85rem",
                                                     fontWeight: "bold",
-                                                    background: c.severity === "5" ? "#ffebee" : c.severity === "4" ? "#fff3e0" : c.severity === "3" ? "#fff8e1" : "#f5f5f5",
-                                                    color: c.severity === "5" ? "#c62828" : c.severity === "4" ? "#ef6c00" : c.severity === "3" ? "#f57f17" : "#616161",
-                                                    border: `1px solid ${c.severity === "5" ? "#ffcdd2" : c.severity === "4" ? "#ffe0b2" : c.severity === "3" ? "#ffecb3" : "#e0e0e0"}`
+                                                    background: c.severity === "5" ? "#ffebee" : c.severity === "4" ? "#fff3e0" : c.severity === "3" ? "#fff8e1" : "#e3f2fd",
+                                                    color: c.severity === "5" ? "#c62828" : c.severity === "4" ? "#ef6c00" : c.severity === "3" ? "#f57f17" : "#1976d2"
                                                 }}>
                                                     Severity: {c.severity || "0"}
                                                 </span>
-                                                <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                                                <span className={`pill status-${c.status.toLowerCase()}`} style={{ padding: "6px 12px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "bold" }}>
+                                                    {c.status}
+                                                </span>
                                             </div>
                                         </div>
-                                        <p>{c.description}</p>
-                                        <div className="box-footer" style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px", alignItems: "flex-start" }}>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.9rem", color: "#4b5563" }}>
-                                                <span><strong>Dept:</strong> {c.department || "None"}</span>
-                                                <span><strong>Assignee:</strong> {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
+                                        <p style={{ color: "#555", lineHeight: "1.6", marginBottom: "20px" }}>{c.description}</p>
+                                        
+                                        <div style={{ padding: "15px", background: "#f8f9fa", borderRadius: "8px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "15px", alignItems: "center" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.95rem", color: "#4b5563" }}>
+                                                <span><strong style={{ color: "#2c3e50" }}>Assigned Dept:</strong> {c.department || "None"}</span>
+                                                <span><strong style={{ color: "#2c3e50" }}>Assigned Employee:</strong> {c.assigned_employees?.map(e => e.name).join(", ") || "None"}</span>
                                             </div>
-                                            <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-                                                <select
-                                                    onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
-                                                    style={{ padding: "5px", borderRadius: "4px" }}
-                                                    value=""
-                                                >
-                                                    <option value="" disabled>Reassign To Dept...</option>
-                                                    {departments.map(d => (
-                                                        <option key={d.id} value={d.id}>{d.name}</option>
-                                                    ))}
-                                                </select>
-                                                <select
-                                                    onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
-                                                    style={{ padding: "5px", borderRadius: "4px" }}
-                                                    value=""
-                                                    disabled={!c.department}
-                                                >
-                                                    <option value="" disabled>Assign Employee...</option>
-                                                    {employees.filter(emp => emp.department === c.department).map(emp => (
-                                                        <option key={emp.id} value={emp.id}>{emp.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            
+                                            {c.status !== 'CLOSED' && (
+                                                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                    <select
+                                                        onChange={(e) => handleReassign(c.complaint_id, e.target.value)}
+                                                        style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #dcdde1", outline: "none", cursor: "pointer", background: "#fff" }}
+                                                        value=""
+                                                    >
+                                                        <option value="" disabled>Reassign Dept...</option>
+                                                        {departments.map(d => (
+                                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <select
+                                                        onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
+                                                        style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #dcdde1", outline: "none", cursor: c.department ? "pointer" : "not-allowed", background: c.department ? "#fff" : "#eee" }}
+                                                        value=""
+                                                        disabled={!c.department}
+                                                    >
+                                                        <option value="" disabled>Assign Employee...</option>
+                                                        {employees.filter(emp => emp.department === c.department).map(emp => (
+                                                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
-                                {data.complaints.length === 0 && <p>No complaints found.</p>}
+                                {data.complaints.filter(c => complaintTab === 'pending' ? c.status !== 'CLOSED' : c.status === 'CLOSED').length === 0 && (
+                                    <div style={{ padding: "30px", textAlign: "center", color: "#7f8c8d", background: "#f8f9fa", borderRadius: "8px" }}>
+                                        No {complaintTab} complaints found.
+                                    </div>
+                                )}
                             </div>
                         </section>
                     )}

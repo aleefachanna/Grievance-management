@@ -149,12 +149,16 @@ def create_employee(data):
 def manager_login(request):
     email = request.data.get("email")
     password = request.data.get("password", "")
+    org_id = request.data.get("organisation_id")
 
     try:
         manager = Manager.objects.get(user__email=email)
 
         if not manager.user.check_password(password):
             raise Manager.DoesNotExist
+
+        if org_id and str(manager.organisation.id) != str(org_id):
+            return Response({"error": "Manager does not belong to the selected organisation"}, status=status.HTTP_403_FORBIDDEN)
 
         refresh = RefreshToken.for_user(manager.user)
 
