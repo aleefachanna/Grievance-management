@@ -245,7 +245,7 @@ function DepDashboard() {
       {/* Main Content Area */}
       <main className="main-viewport">
         <header className="top-nav">
-          <div className="stats-header">
+          <div className="stats-header" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <span><strong>Tasks:</strong> {dashboard.works_count}</span>
             <span><strong>Issues:</strong> {dashboard.complaints_count}</span>
           </div>
@@ -514,102 +514,232 @@ function DepDashboard() {
             </section>
           )}
 
-          {activeTab === "my_complaints" && (
-            <section>
-              <h3>My Assigned Complaints</h3>
-              <div className="complaint-grid">
-                {console.log("Complaints:", complaints, "Dash ID:", dashboard?.current_employee_id)}
-                {complaints.filter(c => c.status !== "CLOSED" && c.assigned_employees?.some(e => String(e.id) === String(dashboard.current_employee_id))).map(c => {
-                  const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
-                  return (
-                    <div key={c.id || c.complaint_id} className="complaint-box" style={{ position: 'relative', border: isOverdue ? '1px solid #e74c3c' : '1px solid #e1e4e8' }}>
-                      {isOverdue && (
-                        <span style={{ position: 'absolute', top: '-10px', right: '10px', background: '#e74c3c', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>OVERDUE</span>
-                      )}
-                      <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50', display: 'flex', justifyContent: 'space-between' }}>
-                        ID: {c.complaint_id}
-                        {c.deadline && <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'normal' }}>Due: {new Date(c.deadline).toLocaleDateString()}</span>}
-                      </h5>
-                      <p style={{ marginBottom: '15px' }}>{c.description.substring(0, 100)}{c.description.length > 100 ? '...' : ''}</p>
-                      <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px' }}>
-                        <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
-                        <div style={{ fontSize: '11px', color: '#8e44ad', fontWeight: 'bold', background: '#f4ecf8', padding: '2px 8px', borderRadius: '10px' }}>
-                          Assigned to Me
-                        </div>
-                        <button onClick={() => setSelectedComplaint(c)} style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Notes & Details
-                        </button>
+              {activeTab === "my_complaints" && (
+            <section style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0 }}>My Assigned Complaints</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {(() => {
+                  const filteredComplaints = complaints.filter(c => 
+                    c.status !== "CLOSED" && 
+                    c.assigned_employees?.some(e => String(e.id) === String(dashboard.current_employee_id))
+                  );
 
-                        <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
-                          {c.status === "PENDING" && (
-                            <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                              Start Working
+                  if (filteredComplaints.length === 0) {
+                    return (
+                      <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px dashed #444', borderRadius: '12px', color: '#94a3b8' }}>
+                         No active complaints assigned to you.
+                      </div>
+                    );
+                  }
+
+                  return filteredComplaints.map((c, idx) => {
+                    const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
+                    return (
+                      <div key={c.id || c.complaint_id} style={{ 
+                        background: 'var(--bg-secondary)', 
+                        border: '1px solid var(--glass-border)', 
+                        borderRadius: '16px', 
+                        padding: '24px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        position: 'relative',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      >
+                        {isOverdue && (
+                          <span style={{ position: 'absolute', top: '15px', right: '20px', background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
+                        )}
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                            <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: 'bold', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+                              {idx + 1}
+                            </span>
+                            <div>
+                              <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>ID: {c.complaint_id}</h4>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {c.deadline ? `Due: ${new Date(c.deadline).toLocaleDateString()}` : 'No deadline set'}
+                              </span>
+                            </div>
+                          </div>
+                          <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                        </div>
+
+                        <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                          {c.description}
+                        </p>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', pt: '15px', borderTop: '1px solid var(--glass-border)' }}>
+                          <button 
+                            onClick={() => setSelectedComplaint(c)}
+                            style={{ 
+                              background: 'transparent', 
+                              border: '1px solid var(--glass-border)', 
+                              color: 'var(--text-main)', 
+                              padding: '8px 16px', 
+                              borderRadius: '8px', 
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              fontWeight: '500',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseOut={(e) => e.target.style.background = 'transparent'}
+                          >
+                            View Analysis & Logs
+                          </button>
+
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            {c.status === "PENDING" && (
+                              <button 
+                                onClick={() => handleUpdateComplaint(c, "WORKING")}
+                                style={{ background: '#f39c12', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+                              >
+                                Start Working
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleUpdateComplaint(c, "CLOSED")}
+                              style={{ background: dashboard.is_hod ? 'var(--accent-primary)' : '#e74c3c', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+                            >
+                              {dashboard.is_hod ? "Mark Resolved" : "Request Close"}
                             </button>
-                          )}
-                          {c.status !== "CLOSED" && (
-                            <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'cursor', fontSize: '12px' }}>
-                              {dashboard.is_hod ? "Close & Notify" : "Request Close"}
-                            </button>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    );
+                  });
+                })()}
               </div>
             </section>
           )}
 
           {activeTab === "complaints" && (
-            <section>
-              <h3>All Department Complaints</h3>
-              <div className="complaint-grid">
-                {complaints.map(c => {
+            <section style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
+              <h3 style={{ marginBottom: '20px' }}>All Department Complaints</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {complaints.map((c, idx) => {
                   const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
                   return (
-                    <div key={c.id || c.complaint_id} className="complaint-box" style={{ position: 'relative', border: isOverdue ? '1px solid #e74c3c' : '1px solid #e1e4e8' }}>
+                    <div key={c.id || c.complaint_id} style={{ 
+                      background: 'var(--bg-secondary)', 
+                      border: '1px solid var(--glass-border)', 
+                      borderRadius: '16px', 
+                      padding: '24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '16px',
+                      position: 'relative',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    >
                       {isOverdue && (
-                        <span style={{ position: 'absolute', top: '-10px', right: '10px', background: '#e74c3c', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>OVERDUE</span>
+                        <span style={{ position: 'absolute', top: '15px', right: '20px', background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
                       )}
-                      <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50', display: 'flex', justifyContent: 'space-between' }}>
-                        ID: {c.complaint_id}
-                        {c.deadline && <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'normal' }}>Due: {new Date(c.deadline).toLocaleDateString()}</span>}
-                      </h5>
-                      <p style={{ marginBottom: '15px' }}>{c.description.substring(0, 100)}{c.description.length > 100 ? '...' : ''}</p>
-                      <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                        <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
-                        
-                        <div style={{ fontSize: '11px', color: '#7f8c8d' }}>
-                          Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                          <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: 'bold', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>ID: {c.complaint_id}</h4>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              {c.deadline ? `Due: ${new Date(c.deadline).toLocaleDateString()}` : 'No deadline set'}
+                            </span>
+                          </div>
                         </div>
-                        {dashboard.is_hod && (
-                          <select onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)} value="" style={{ fontSize: '11px', padding: '3px 6px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                            <option value="" disabled>Assign To...</option>
-                            {dashboard.employees?.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name}</option>
-                            ))}
-                          </select>
-                        )}
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px' }}>
+                             Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
+                           </span>
+                           <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                        </div>
+                      </div>
 
-                        <button onClick={() => setSelectedComplaint(c)} style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Notes & Details
-                        </button>
+                      <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                        {c.description}
+                      </p>
 
-                        <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', pt: '15px', borderTop: '1px solid var(--glass-border)' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => setSelectedComplaint(c)}
+                            style={{ 
+                              background: 'transparent', 
+                              border: '1px solid var(--glass-border)', 
+                              color: 'var(--text-main)', 
+                              padding: '8px 16px', 
+                              borderRadius: '8px', 
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              fontWeight: '500'
+                            }}
+                          >
+                            View Details
+                          </button>
+                          
+                          {dashboard.is_hod && (
+                            <select 
+                              onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)} 
+                              value="" 
+                              style={{ 
+                                background: 'transparent', 
+                                color: 'var(--text-muted)', 
+                                border: '1px solid var(--glass-border)', 
+                                padding: '8px', 
+                                borderRadius: '8px',
+                                fontSize: '0.85rem',
+                                outline: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <option value="" disabled>Assign To...</option>
+                              {dashboard.employees?.map(emp => (
+                                  <option key={emp.id} value={emp.id} style={{ background: '#13131f', color: '#fff' }}>{emp.name}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
                           {c.status === "PENDING" && (
-                            <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                            <button 
+                              onClick={() => handleUpdateComplaint(c, "WORKING")}
+                              style={{ background: '#f39c12', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+                            >
                               Start Working
                             </button>
                           )}
-                          {c.status !== "CLOSED" && (
-                            <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                              {dashboard.is_hod ? "Close & Notify" : "Request Close"}
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => handleUpdateComplaint(c, "CLOSED")}
+                            style={{ background: dashboard.is_hod ? 'var(--accent-primary)' : '#e74c3c', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
+                          >
+                            {dashboard.is_hod ? "Mark Resolved" : "Request Close"}
+                          </button>
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </section>
