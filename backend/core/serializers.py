@@ -162,6 +162,7 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
 
 class ComplaintTrackSerializer(serializers.ModelSerializer):
     organisation = serializers.CharField(source="organisation.name", read_only=True)
+    department = serializers.CharField(source="department.name", read_only=True)
     public_updates = serializers.SerializerMethodField()
 
     class Meta:
@@ -169,6 +170,7 @@ class ComplaintTrackSerializer(serializers.ModelSerializer):
         fields = [
             "complaint_id",
             "organisation",
+            "department",
             "status",
             "severity",
             "description",
