@@ -557,10 +557,6 @@ function DepDashboard() {
                         e.currentTarget.style.boxShadow = 'none';
                       }}
                       >
-                        {isOverdue && (
-                          <span style={{ position: 'absolute', top: '15px', right: '20px', background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
-                        )}
-                        
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                             <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: 'bold', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
@@ -573,7 +569,12 @@ function DepDashboard() {
                               </span>
                             </div>
                           </div>
-                          <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            {isOverdue && (
+                              <span style={{ background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
+                            )}
+                            <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
+                          </div>
                         </div>
 
                         <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
@@ -652,29 +653,28 @@ function DepDashboard() {
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                     >
-                      {isOverdue && (
-                        <span style={{ position: 'absolute', top: '15px', right: '20px', background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
-                      )}
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                          <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: 'bold', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                            {idx + 1}
-                          </span>
-                          <div>
-                            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>ID: {c.complaint_id}</h4>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                              {c.deadline ? `Due: ${new Date(c.deadline).toLocaleDateString()}` : 'No deadline set'}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                            <span style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '1rem', fontWeight: 'bold', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+                              {idx + 1}
                             </span>
+                            <div>
+                              <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>ID: {c.complaint_id}</h4>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {c.deadline ? `Due: ${new Date(c.deadline).toLocaleDateString()}` : 'No deadline set'}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                             {isOverdue && (
+                               <span style={{ background: '#e74c3c', color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', letterSpacing: '0.5px' }}>OVERDUE</span>
+                             )}
+                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px' }}>
+                               Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
+                             </span>
+                             <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px' }}>
-                             Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
-                           </span>
-                           <span className={`pill status-${c.status.toLowerCase()}`}>{c.status}</span>
-                        </div>
-                      </div>
 
                       <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
                         {c.description}
