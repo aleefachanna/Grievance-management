@@ -45,30 +45,46 @@ body {
   letter-spacing: -0.5px;
 }
 
-.sidebar nav button {
+.sidebar-group {
+  margin-bottom: 30px;
+}
+
+.sidebar-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  padding-left: 16px;
+  opacity: 0.7;
+}
+
+.sidebar button {
   width: 100%;
-  padding: 14px 16px;
-  margin: 8px 0;
+  padding: 12px 16px;
+  margin: 4px 0;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
   text-align: left;
   cursor: pointer;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
-.sidebar nav button:hover {
+.sidebar button:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: var(--text-main);
+  color: var(--accent-primary);
 }
 
-.sidebar nav button.active {
+.sidebar button.active {
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.3);
   color: var(--accent-primary);
+  font-weight: 600;
 }
 
 .main-viewport {

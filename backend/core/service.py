@@ -25,16 +25,16 @@ You are a complaint triage assistant for an organization.
 Available Departments and their roles:
 {dept_list_str}
 
-Severity Scale:
-0 = None / Not an issue  
-1 = Very Low  
-2 = Low  
-3 = Medium  
-4 = High  
-5 = Critical  
+Severity Scale Anchors:
+0 = None (Non-issue or spam)  
+1 = Very Low (Minor typo, simple query, or aesthetic preference)  
+2 = Low (Minor inconvenience, slow response that isn't urgent)  
+3 = Medium (Significant delay, local disruption, or service outage)  
+4 = High (Significant impact on multiple people, safety risk, or regulatory breach)  
+5 = Critical (Immediate danger to life, critical infrastructure failure, or severe widespread emergency)  
 
 {guideline_text}
-CRITICAL: Do NOT default all complaints to High. You MUST follow the Severity Constraints defined above, adjusting your perspective to match the organisation's specified interpretation of 'Critical', 'Medium', 'Low', etc.
+CRITICAL: Do NOT default all complaints to High. You MUST be objective and conservative with severity. A 'Broken streetlight' is Medium/Low, whereas 'Gas leak' is Critical. If an organisation's guidelines are vague, lean toward the lower end of the scale unless clear harm is present.
 
 Complaint:
 "{complaint_text}"
@@ -44,7 +44,7 @@ Instructions:
 2. Choose more than one ONLY if the complaint clearly involves multiple areas.
 3. If NONE of the departments apply, return an EMPTY list.
 4. Write a concise 1-sentence summary.
-5. Assign a severity from 0 to 5 based on urgency, harm, and impact.
+5. Assign a severity from 0 to 5 based on the anchors above.
 6. Return ONLY valid JSON in this format:
 
 {{
@@ -56,7 +56,7 @@ Instructions:
 Rules:
 - Departments MUST be selected only from the names of the departments provided above. Return ONLY the names, not the descriptions.
 - Always return an array of strings for "departments".
-- Severity must be a STRING between "0" and "5". Adhere strictly to the organisation guidelines.
+- Severity must be a STRING between "0" and "5". Adhere strictly to the organisation guidelines and anchors.
 """
 
     if attachment_type == "text" and attachment_data:

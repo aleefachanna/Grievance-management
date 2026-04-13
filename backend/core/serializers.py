@@ -210,7 +210,14 @@ class DepartmentWorkSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "department", "complaints", "status", "created_at", "closed_at", "assigned_employees"]
         
     def get_complaints(self, obj):
-        return [c.complaint_id for c in obj.complaints.all()]
+        return [
+            {
+                "id": str(c.id),
+                "complaint_id": c.complaint_id,
+                "summary": c.ai_summary or (c.description[:60] + "..." if len(c.description) > 60 else c.description)
+            }
+            for c in obj.complaints.all()
+        ]
 
     def get_assigned_employees(self, obj):
         names = []

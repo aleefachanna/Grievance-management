@@ -80,19 +80,6 @@ function ManagerDash() {
         }
     };
 
-    const handleAssignEmployee = async (complaintId, employeeId) => {
-        try {
-            await pApi.post("/dashboard/manager/", {
-                action: "assign_complaint_employee",
-                complaint_id: complaintId,
-                employee_ids: [employeeId]
-            });
-            fetchData();
-        } catch (error) {
-            console.error(error);
-            alert("Failed to assign employee.");
-        }
-    };
 
     const handleGenerateSummary = async () => {
         setLoadingSummary(true);
@@ -454,17 +441,6 @@ function ManagerDash() {
                                                         <option value="" disabled>Reassign Dept...</option>
                                                         {departments.map(d => (
                                                             <option key={d.id} value={d.id}>{d.name}</option>
-                                                        ))}
-                                                    </select>
-                                                    <select
-                                                        onChange={(e) => handleAssignEmployee(c.complaint_id, e.target.value)}
-                                                        style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #dcdde1", outline: "none", cursor: c.department ? "pointer" : "not-allowed", background: c.department ? "#fff" : "#eee" }}
-                                                        value=""
-                                                        disabled={!c.department}
-                                                    >
-                                                        <option value="" disabled>Assign Employee...</option>
-                                                        {employees.filter(emp => emp.department === c.department).map(emp => (
-                                                            <option key={emp.id} value={emp.id}>{emp.name}</option>
                                                         ))}
                                                     </select>
                                                 </div>

@@ -259,6 +259,20 @@ class DepartmentWorkViewSet(viewsets.ModelViewSet):
             
         return Response({"message": "Assigned successfully to Work and linked Complaints"})
 
+    # 🔹 Purge all closed works for this department
+    @action(detail=False, methods=["post"])
+    def purge_closed(self, request):
+        employee = request.user.employee_profile
+        if not employee.isHod:
+            return Response({"error": "Only HOD can purge works"}, status=403)
+        
+        deleted_count, _ = DepartmentWork.objects.filter(
+            department=employee.department,
+            status="CLOSED"
+        ).delete()
+        
+        return Response({"message": f"Successfully purged {deleted_count} closed works."})
+
     # 🔹 Work Partial Update
     def partial_update(self, request, *args, **kwargs):
         work = self.get_object()
@@ -478,6 +492,7 @@ class DepartmentDashboardView(APIView):
         return Response({
             "department": department.name,
             "is_hod": employee.isHod,
+            "employee_name": f"{employee.user.first_name} {employee.user.last_name}".strip() or employee.user.username,
             "current_employee_id": str(employee.id),
             "complaints_count": complaints.count(),
             "works_count": works.count(),
