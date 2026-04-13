@@ -40,7 +40,7 @@ const OrganisationList = () => {
   return (
     <div className="resolve-wrapper">
       <div className="resolve-card" style={{ maxWidth: '800px', width: '100%' }}>
-        
+
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
@@ -62,7 +62,7 @@ const OrganisationList = () => {
           <span className="resolve-logo-text">ResolvePro</span>
         </div>
 
-        <h2 className="resolve-header">Browse Organizations</h2>
+        <h2 className="resolve-header">Browse Registered Organizations</h2>
 
         <div className="resolve-input-group">
           <input

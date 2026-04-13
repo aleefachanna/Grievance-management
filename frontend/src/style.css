@@ -10,15 +10,13 @@
   --accent-glow: rgba(99, 102, 241, 0.4);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --glass-bg: rgba(19, 19, 31, 0.7);
+  --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Global Reset & Wrapper --- */
 .resolve-wrapper {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #210E2A 0%, #2D1A3A 100%);
-  color: white;
   background-color: var(--bg-primary);
   min-height: 100vh;
   width: 100vw;
@@ -26,7 +24,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
@@ -42,9 +39,16 @@
   position: absolute;
   filter: blur(80px);
   z-index: 0;
-  opacity: 0.4;
+  opacity: 0.6;
   border-radius: 50%;
   pointer-events: none;
+  animation: float 20s infinite alternate ease-in-out;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(5%, 10%) scale(1.1); }
+  100% { transform: translate(-5%, -5%) scale(0.95); }
 }
 
 .resolve-wrapper::before {
@@ -67,21 +71,21 @@
 .resolve-card {
   position: relative;
   z-index: 10;
-  background: var(--glass-bg);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   padding: 40px;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1px solid var(--glass-border);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   box-sizing: border-box;
   text-align: center;
 }
 
 .resolve-card-wide {
-  max-width: 800px;
+  max-width: 850px;
 }
 
 /* --- Typography --- */
@@ -97,48 +101,58 @@
 }
 
 .resolve-header {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  letter-spacing: -0.5px;
 }
 
 /* --- Form Elements --- */
 .resolve-input-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   text-align: left;
 }
 
 .resolve-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .resolve-input {
   width: 100%;
-  padding: 14px;
+  padding: 14px 18px;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
   font-size: 15px;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
   outline: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
 }
 
 .resolve-input:focus {
   border-color: var(--accent-primary);
-  background-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
 .resolve-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Style select dropdown arrows */
+select.resolve-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(148, 163, 184, 0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 45px;
 }
 
 /* --- Grid System --- */
@@ -156,26 +170,33 @@
 /* --- Buttons --- */
 .resolve-btn {
   width: 100%;
-  padding: 14px;
-  background-color: #859E75;
-  color: black;
+  padding: 16px;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   margin-top: 15px;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 30px rgba(133, 158, 117, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
 .resolve-btn:hover {
-  background-color: #FFF3B8;
-  color: #210E2A;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(255, 243, 184, 0.4);
+  box-shadow: 0 8px 30px var(--accent-glow);
+  filter: brightness(1.1);
+}
+
+.resolve-btn:active {
+  transform: translateY(0);
+}
+
+.resolve-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* --- Modern Back Buttons --- */
