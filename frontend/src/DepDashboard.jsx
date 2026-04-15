@@ -274,12 +274,14 @@ function DepDashboard() {
             <span><strong>Tasks:</strong> {dashboard.works_count}</span>
             <span><strong>Issues:</strong> {dashboard.complaints_count}</span>
           </div>
-          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '14px' }}>{dashboard.employee_name}</div>
-              <span className="badge" style={{ fontSize: '10px', padding: '2px 8px' }}>{dashboard.is_hod ? "HOD" : "Staff Account"}</span>
+          <div className="user-profile">
+            <div className="user-info-text">
+              <div className="user-name">{dashboard.employee_name}</div>
+              <div>
+                <span className="profile-badge">{dashboard.is_hod ? "HOD" : "Staff Account"}</span>
+              </div>
             </div>
-            <div style={{ width: '40px', height: '40px', background: '#3498db', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+            <div className="profile-avatar">
               {dashboard.employee_name?.charAt(0).toUpperCase()}
             </div>
           </div>
@@ -569,43 +571,51 @@ function DepDashboard() {
           {activeTab === "my_complaints" && (
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3>My Assigned Complaints</h3>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button onClick={() => setComplaintTab('active')} style={{ padding: '5px 10px', fontSize: '12px', background: complaintTab === 'active' ? '#3498db' : '#eee', color: complaintTab === 'active' ? 'white' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Active</button>
-                  <button onClick={() => setComplaintTab('closed')} style={{ padding: '5px 10px', fontSize: '12px', background: complaintTab === 'closed' ? '#2ecc71' : '#eee', color: complaintTab === 'closed' ? 'white' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Closed</button>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>My Assigned Complaints</h3>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => setComplaintTab('active')} className={complaintTab === 'active' ? 'active' : ''} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer', background: complaintTab === 'active' ? 'var(--accent-primary)' : 'transparent', color: 'white' }}>Active</button>
+                  <button onClick={() => setComplaintTab('closed')} className={complaintTab === 'closed' ? 'active' : ''} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer', background: complaintTab === 'closed' ? 'var(--accent-primary)' : 'transparent', color: 'white' }}>Closed</button>
                 </div>
               </div>
               <div className="complaint-grid">
                 {complaints.filter(c => (complaintTab === 'closed' ? c.status === "CLOSED" : c.status !== "CLOSED") && c.assigned_employees?.some(e => String(e.id) === String(dashboard.current_employee_id))).map(c => {
                   const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
                   return (
-                    <div key={c.id || c.complaint_id} className="complaint-box" style={{ position: 'relative', border: isOverdue ? '1px solid #e74c3c' : '1px solid #e1e4e8' }}>
-                      {isOverdue && (
-                        <span style={{ position: 'absolute', top: '-10px', right: '10px', background: '#e74c3c', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>OVERDUE</span>
-                      )}
-                      <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50', display: 'flex', justifyContent: 'space-between' }}>
-                        ID: {c.complaint_id}
-                        {c.deadline && <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'normal' }}>Due: {new Date(c.deadline).toLocaleDateString()}</span>}
-                      </h5>
-                      <p style={{ marginBottom: '15px' }}>{c.description.substring(0, 100)}{c.description.length > 100 ? '...' : ''}</p>
-                      <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px' }}>
-                        <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
-                        <div style={{ fontSize: '11px', color: '#8e44ad', fontWeight: 'bold', background: '#f4ecf8', padding: '2px 8px', borderRadius: '10px' }}>
-                          Assigned to Me
-                        </div>
-                        <button onClick={() => setSelectedComplaint(c)} style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Notes & Details
-                        </button>
+                    <div key={c.id || c.complaint_id} className={`complaint-box ${isOverdue ? 'overdue' : ''}`}>
+                      <div className="complaint-info-main">
+                        <span className="complaint-id">#{c.complaint_id}</span>
+                        {c.deadline && (
+                          <span className="complaint-deadline">
+                            📅 {new Date(c.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
 
-                        <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
+                      <div className="complaint-description-brief">
+                        {c.description}
+                      </div>
+
+                      <div className="box-footer">
+                        <span className={`status-pill status-${c.status.toLowerCase()}`}>
+                          {c.status}
+                        </span>
+                        
+                        <span className="assigned-badge">FOR ME</span>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => setSelectedComplaint(c)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                            Details
+                          </button>
+                          
                           {c.status === "PENDING" && (
-                            <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                              Start Working
+                            <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                              Start
                             </button>
                           )}
+                          
                           {c.status !== "CLOSED" && (
-                            <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                              {dashboard.is_hod ? "Close & Notify" : "Request Close"}
+                            <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                              {dashboard.is_hod ? "Close" : "Request Close"}
                             </button>
                           )}
                         </div>
@@ -620,10 +630,10 @@ function DepDashboard() {
           {activeTab === "complaints" && (
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3>All Department Complaints</h3>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button onClick={() => setComplaintTab('active')} style={{ padding: '5px 10px', fontSize: '12px', background: complaintTab === 'active' ? '#3498db' : '#eee', color: complaintTab === 'active' ? 'white' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Active</button>
-                  <button onClick={() => setComplaintTab('closed')} style={{ padding: '5px 10px', fontSize: '12px', background: complaintTab === 'closed' ? '#2ecc71' : '#eee', color: complaintTab === 'closed' ? 'white' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Closed</button>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>All Department Complaints</h3>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => setComplaintTab('active')} className={complaintTab === 'active' ? 'active' : ''} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer', background: complaintTab === 'active' ? 'var(--accent-primary)' : 'transparent', color: 'white' }}>Active</button>
+                  <button onClick={() => setComplaintTab('closed')} className={complaintTab === 'closed' ? 'active' : ''} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer', background: complaintTab === 'closed' ? 'var(--accent-primary)' : 'transparent', color: 'white' }}>Closed</button>
                 </div>
               </div>
               <div className="complaint-grid">
@@ -631,46 +641,60 @@ function DepDashboard() {
                   const isOverdue = c.deadline && new Date(c.deadline) < new Date() && c.status !== 'CLOSED';
                   const isAssignedToMe = c.assigned_employees?.some(e => String(e.id) === String(dashboard.current_employee_id));
                   return (
-                    <div key={c.id || c.complaint_id} className="complaint-box" style={{ position: 'relative', border: isOverdue ? '1px solid #e74c3c' : '1px solid #e1e4e8' }}>
-                      {isOverdue && (
-                        <span style={{ position: 'absolute', top: '-10px', right: '10px', background: '#e74c3c', color: 'white', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold' }}>OVERDUE</span>
-                      )}
-                      <h5 style={{ margin: '0 0 10px 0', color: '#2c3e50', display: 'flex', justifyContent: 'space-between' }}>
-                        ID: {c.complaint_id}
-                        {c.deadline && <span style={{ fontSize: '11px', color: '#7f8c8d', fontWeight: 'normal' }}>Due: {new Date(c.deadline).toLocaleDateString()}</span>}
-                      </h5>
-                      <p style={{ marginBottom: '15px' }}>{c.description.substring(0, 100)}{c.description.length > 100 ? '...' : ''}</p>
-                      <div className="box-footer" style={{ flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                        <span className={`status-${c.status.toLowerCase()}`}>{c.status}</span>
-                        
-                        <div style={{ fontSize: '11px', color: '#7f8c8d' }}>
-                          Assignee: {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
+                    <div key={c.id || c.complaint_id} className={`complaint-box ${isOverdue ? 'overdue' : ''}`}>
+                      <div className="complaint-info-main">
+                        <span className="complaint-id">#{c.complaint_id}</span>
+                        {c.deadline && (
+                          <span className="complaint-deadline">
+                            📅 {new Date(c.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                        {isAssignedToMe && <span className="assigned-badge" style={{ width: 'max-content', marginTop: '4px' }}>FOR ME</span>}
+                      </div>
+
+                      <div className="complaint-description-brief">
+                        {c.description}
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '600' }}>
+                          👤 {c.assigned_employees?.map(e => e.name).join(", ") || "Unassigned"}
                         </div>
+                      </div>
+
+                      <div className="box-footer">
+                        <span className={`status-pill status-${c.status.toLowerCase()}`}>
+                          {c.status}
+                        </span>
+                        
                         {dashboard.is_hod && c.status !== "CLOSED" && (
-                          <select onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)} value="" style={{ fontSize: '11px', padding: '3px 6px', borderRadius: '4px', border: '1px solid #ccc' }}>
-                            <option value="" disabled>Assign To...</option>
+                          <select 
+                            onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)} 
+                            value="" 
+                            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', outline: 'none' }}
+                          >
+                            <option value="" disabled>Assign...</option>
                             {dashboard.employees?.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                <option key={emp.id} value={emp.id} style={{ background: 'var(--bg-secondary)' }}>{emp.name}</option>
                             ))}
                           </select>
                         )}
 
-                        <button onClick={() => setSelectedComplaint(c)} style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Notes & Details
-                        </button>
-
-                        {(dashboard.is_hod || isAssignedToMe) && c.status !== "CLOSED" && (
-                          <div style={{ display: 'flex', gap: '5px', ml: 'auto' }}>
-                            {c.status === "PENDING" && (
-                              <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                                Start Working
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => setSelectedComplaint(c)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                            Details
+                          </button>
+                          
+                          {(dashboard.is_hod || isAssignedToMe) && c.status !== "CLOSED" && (
+                            <>
+                              {c.status === "PENDING" && (
+                                <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                                  Start
+                                </button>
+                              )}
+                              <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
+                                {dashboard.is_hod ? "Close" : "Request Close"}
                               </button>
-                            )}
-                            <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                              {dashboard.is_hod ? "Close & Notify" : "Request Close"}
-                            </button>
-                          </div>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )
