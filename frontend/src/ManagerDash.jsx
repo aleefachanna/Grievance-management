@@ -190,8 +190,8 @@ function ManagerDash() {
                     <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>Org/AI Settings</button>
                 </nav>
                 <div style={{ marginTop: "auto" }}>
-                    <button onClick={handleLogout} style={{ width: "100%", padding: "12px", background: "rgba(231, 76, 60, 0.9)", color: "white", border: "1px solid rgba(231, 76, 60, 0.3)", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", transition: "all 0.3s ease" }} onMouseOver={(e) => e.target.style.background = "#c0392b"} onMouseOut={(e) => e.target.style.background = "rgba(231, 76, 60, 0.9)"}>
-                        Logout
+                    <button onClick={handleLogout} className="logout-btn">
+                        🚪 Logout
                     </button>
                 </div>
             </aside>

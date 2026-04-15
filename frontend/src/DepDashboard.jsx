@@ -58,12 +58,12 @@ function DepDashboard() {
     setAiLoading(true);
     try {
       const res = await pApi.post("/department/ai/auto_manage_works/");
-      alert(res.data.message || "AI Auto-Manage complete.");
+      alert(res.data.message || "Auto-Manage complete.");
       loadAllData();
       setActiveTab('works');
     } catch (err) {
       console.error(err);
-      alert("AI Auto-Manage failed.");
+      alert("Auto-Manage failed.");
     } finally {
       setAiLoading(false);
     }
@@ -93,11 +93,11 @@ function DepDashboard() {
     setAiLoading(true);
     try {
       const res = await pApi.post("/department/ai/assign_employees/");
-      alert(res.data.message || "AI Auto-Assignment complete.");
+      alert(res.data.message || "Auto-Assignment complete.");
       loadAllData();
     } catch (err) {
       console.error(err);
-      alert("AI Assignment failed.");
+      alert("Assignment failed.");
     } finally {
       setAiLoading(false);
     }
@@ -238,7 +238,7 @@ function DepDashboard() {
           <button className={activeTab === 'complaints' ? 'active' : ''} onClick={() => setActiveTab('complaints')}>All Complaints</button>
           <button className={activeTab === 'works' ? 'active' : ''} onClick={() => setActiveTab('works')}>All Works</button>
         </div>
-        
+
         {dashboard.is_hod && (
           <div className="sidebar-group">
             <small className="sidebar-label">MANAGEMENT</small>
@@ -251,18 +251,8 @@ function DepDashboard() {
           <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>Account Settings</button>
         </div>
         <div style={{ marginTop: "auto" }}>
-          <button onClick={handleLogout} style={{ 
-            width: "100%", 
-            padding: "12px", 
-            background: "rgba(231, 76, 60, 0.9)", 
-            color: "white", 
-            border: "1px solid rgba(231, 76, 60, 0.3)", 
-            borderRadius: "8px", 
-            cursor: "pointer", 
-            fontWeight: "bold", 
-            transition: "all 0.3s ease" 
-          }}>
-            Logout
+          <button onClick={handleLogout} className="logout-btn">
+            🚪 Logout
           </button>
         </div>
       </aside>
@@ -292,8 +282,8 @@ function DepDashboard() {
           <div className="action-bar">
             <button onClick={() => setShowWorkModal(true)} className="resolve-btn" style={{ background: '#27ae60' }}>+ Create Work</button>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button disabled={aiLoading} onClick={runAIAutoManageWorks} className="ai-btn" style={{ background: '#e67e22' }}>🪄 AI Auto-Manage Works</button>
-              <button disabled={aiLoading} onClick={runAIEmployeeAssignment} className="ai-btn" style={{ background: '#8e44ad' }}>✨ AI Auto-Assign Staff</button>
+              <button disabled={aiLoading} onClick={runAIAutoManageWorks} className="ai-btn" style={{ background: '#e67e22' }}>🪄 Auto-Manage Works</button>
+              <button disabled={aiLoading} onClick={runAIEmployeeAssignment} className="ai-btn" style={{ background: '#8e44ad' }}> Auto-Assign Staff</button>
               <button disabled={aiLoading} onClick={generateAIReport} className="report-btn">📊 Generate AI Summary</button>
               <button onClick={handlePurgeClosed} className="report-btn" style={{ background: '#e74c3c', color: 'white', border: 'none' }}>🗑️ Purge Closed Works</button>
             </div>
@@ -362,8 +352,8 @@ function DepDashboard() {
             <form onSubmit={submitClose} style={{ background: '#fff', padding: '30px', borderRadius: '12px', width: '400px', maxWidth: '90%' }}>
               <h3 style={{ marginTop: 0, color: '#e74c3c' }}>Confirm Closure</h3>
               <p style={{ fontSize: '14px', color: '#7f8c8d', marginBottom: '15px' }}>
-                {confirmCloseItem.type === 'work' 
-                  ? `Are you sure you want to close Work "${confirmCloseItem.entity.title}"?` 
+                {confirmCloseItem.type === 'work'
+                  ? `Are you sure you want to close Work "${confirmCloseItem.entity.title}"?`
                   : `Are you sure you want to close Complaint ${confirmCloseItem.entity.complaint_id}?`}
               </p>
 
@@ -372,10 +362,10 @@ function DepDashboard() {
                   <strong>⚠️ IMPACT WARNING:</strong> This work order has <strong>{confirmCloseItem.entity.complaints.length}</strong> linked complaints. Proceeding will mark ALL of them as <strong>CLOSED</strong> and notify the respective residents.
                 </div>
               )}
-              
+
               <div className="form-group" style={{ marginBottom: '20px' }}>
                 <label>Remarks (optional)</label>
-                <textarea 
+                <textarea
                   value={remarks}
                   onChange={e => setRemarks(e.target.value)}
                   style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '80px', fontFamily: 'inherit' }}
@@ -426,23 +416,23 @@ function DepDashboard() {
                   <span style={{ fontSize: '13px', color: '#95a5a6' }}>No Works linked natively.</span>
                 )}
                 {dashboard.is_hod && selectedComplaint.status !== "CLOSED" && (
-                    <select 
-                      onChange={async (e) => {
-                        if (!e.target.value) return;
-                        try {
-                          await pApi.post(`/department/complaints/${selectedComplaint.id || selectedComplaint.complaint_id}/assign_work/`, { work_id: e.target.value });
-                          alert("Work linked successfully!");
-                          loadAllData();
-                        } catch (err) { alert("Failed to link Work"); }
-                      }} 
-                      value="" 
-                      style={{ fontSize: '11px', padding: '3px 6px', borderRadius: '4px', border: '1px solid #ccc', marginLeft: 'auto' }}
-                    >
-                      <option value="" disabled>Link to Work...</option>
-                      {works.filter(w => w.status !== "CLOSED").map(work => (
-                          <option key={work.id} value={work.id}>{work.title}</option>
-                      ))}
-                    </select>
+                  <select
+                    onChange={async (e) => {
+                      if (!e.target.value) return;
+                      try {
+                        await pApi.post(`/department/complaints/${selectedComplaint.id || selectedComplaint.complaint_id}/assign_work/`, { work_id: e.target.value });
+                        alert("Work linked successfully!");
+                        loadAllData();
+                      } catch (err) { alert("Failed to link Work"); }
+                    }}
+                    value=""
+                    style={{ fontSize: '11px', padding: '3px 6px', borderRadius: '4px', border: '1px solid #ccc', marginLeft: 'auto' }}
+                  >
+                    <option value="" disabled>Link to Work...</option>
+                    {works.filter(w => w.status !== "CLOSED").map(work => (
+                      <option key={work.id} value={work.id}>{work.title}</option>
+                    ))}
+                  </select>
                 )}
               </div>
 
@@ -487,7 +477,7 @@ function DepDashboard() {
               <table className="data-table">
                 <thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Status / Flow</th></tr></thead>
                 <tbody>
-                  {(activeTab === 'my_works' ? works.filter(w=>w.assigned_employees.some(e=>String(e.id)===String(dashboard.current_employee_id))) : works).map(w => (
+                  {(activeTab === 'my_works' ? works.filter(w => w.assigned_employees.some(e => String(e.id) === String(dashboard.current_employee_id))) : works).map(w => (
                     <tr key={w.id}>
                       <td>
                         <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2c3e50' }}>{w.title}</div>
@@ -508,26 +498,26 @@ function DepDashboard() {
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                          {w.assigned_employees && w.assigned_employees.length > 0
-                            ? w.assigned_employees.map(e => <span key={e.id} style={{ background: '#eee', padding: '2px 6px', borderRadius: '10px', fontSize: '11px', margin: '2px', display: 'inline-block' }}>{e.name}</span>)
-                            : <span style={{ color: '#999', fontStyle: 'italic', fontSize: '12px' }}>Unassigned</span>
-                          }
+                            {w.assigned_employees && w.assigned_employees.length > 0
+                              ? w.assigned_employees.map(e => <span key={e.id} style={{ background: '#eee', padding: '2px 6px', borderRadius: '10px', fontSize: '11px', margin: '2px', display: 'inline-block' }}>{e.name}</span>)
+                              : <span style={{ color: '#999', fontStyle: 'italic', fontSize: '12px' }}>Unassigned</span>
+                            }
                           </div>
                           {dashboard.is_hod && w.status !== "CLOSED" && (
-                            <select 
+                            <select
                               onChange={async (e) => {
                                 if (!e.target.value) return;
                                 try {
                                   await pApi.post(`/department/works/${w.id}/assign/`, { employee_id: e.target.value });
                                   loadAllData();
                                 } catch (err) { alert("Failed to assign employee to work"); }
-                              }} 
-                              value="" 
+                              }}
+                              value=""
                               style={{ fontSize: '10px', padding: '2px', borderRadius: '4px', border: '1px solid #ccc', maxWidth: '120px' }}
                             >
                               <option value="" disabled>+ Assign...</option>
                               {dashboard.employees?.map(emp => (
-                                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                <option key={emp.id} value={emp.id}>{emp.name}</option>
                               ))}
                             </select>
                           )}
@@ -540,7 +530,7 @@ function DepDashboard() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span className="pill" style={{ background: w.status === 'PENDING' ? '#f1c40f' : '#3498db', color: '#fff', fontSize: '10px' }}>{w.status}</span>
                             {(dashboard.is_hod || w.assigned_employees?.some(e => String(e.id) === String(dashboard.current_employee_id))) && (
-                              <select 
+                              <select
                                 onChange={e => {
                                   if (e.target.value === "CLOSED") {
                                     setRemarks("");
@@ -549,8 +539,8 @@ function DepDashboard() {
                                   } else {
                                     handleUpdateWork(w, e.target.value);
                                   }
-                                }} 
-                                value="" 
+                                }}
+                                value=""
                                 style={{ padding: '4px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '11px', outline: 'none' }}
                               >
                                 <option value="" disabled>Update...</option>
@@ -599,20 +589,20 @@ function DepDashboard() {
                         <span className={`status-pill status-${c.status.toLowerCase()}`}>
                           {c.status}
                         </span>
-                        
+
                         <span className="assigned-badge">FOR ME</span>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => setSelectedComplaint(c)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
                             Details
                           </button>
-                          
+
                           {c.status === "PENDING" && (
                             <button onClick={() => handleUpdateComplaint(c, "WORKING")} style={{ background: '#f39c12', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
                               Start
                             </button>
                           )}
-                          
+
                           {c.status !== "CLOSED" && (
                             <button onClick={() => handleUpdateComplaint(c, "CLOSED")} style={{ background: dashboard.is_hod ? '#2ecc71' : '#e74c3c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
                               {dashboard.is_hod ? "Close" : "Request Close"}
@@ -663,16 +653,16 @@ function DepDashboard() {
                         <span className={`status-pill status-${c.status.toLowerCase()}`}>
                           {c.status}
                         </span>
-                        
+
                         {dashboard.is_hod && c.status !== "CLOSED" && (
-                          <select 
-                            onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)} 
-                            value="" 
+                          <select
+                            onChange={(e) => handleAssignEmployee(c.id || c.complaint_id, e.target.value)}
+                            value=""
                             style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', outline: 'none' }}
                           >
                             <option value="" disabled>Assign...</option>
                             {dashboard.employees?.map(emp => (
-                                <option key={emp.id} value={emp.id} style={{ background: 'var(--bg-secondary)' }}>{emp.name}</option>
+                              <option key={emp.id} value={emp.id} style={{ background: 'var(--bg-secondary)' }}>{emp.name}</option>
                             ))}
                           </select>
                         )}
@@ -681,7 +671,7 @@ function DepDashboard() {
                           <button onClick={() => setSelectedComplaint(c)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--glass-border)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>
                             Details
                           </button>
-                          
+
                           {(dashboard.is_hod || isAssignedToMe) && c.status !== "CLOSED" && (
                             <>
                               {c.status === "PENDING" && (

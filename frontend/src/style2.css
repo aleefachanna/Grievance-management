@@ -109,6 +109,36 @@ body {
   z-index: 0;
 }
 
+.logout-btn {
+  width: 100%;
+  padding: 14px;
+  background: #e74c3c;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease-in-out;
+  margin-top: 24px;
+  box-shadow: 0 4px 0px #c0392b;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
 .top-nav {
   display: flex;
   justify-content: space-between;
