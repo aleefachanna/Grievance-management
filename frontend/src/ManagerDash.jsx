@@ -548,7 +548,7 @@ function ManagerDash() {
                             <div style={{ marginBottom: "20px", background: "#f9f9f9", padding: "15px", borderRadius: "8px", border: "1px solid #e1e4e8" }}>
                                 <h4>Organisation Description (AI Context)</h4>
                                 <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "15px" }}>
-                                    This text is used to describe the organisation to the public, and is also passed to the AI to understand the context of the organisation to correctly evaluate the severity of complaints. Mention what your organisation does, and clarify what kind of complaints warrant a "Critical (5)" or "Low (2)" severity.
+                                    This text ispassed to the AI to understand the context of the organisation to correctly evaluate the severity of complaints. Mention what your organisation does, and clarify what kind of complaints warrant a "Critical (5)" or "Low (2)" severity.
                                 </p>
                                 <form onSubmit={handleUpdateSettings} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                     <textarea

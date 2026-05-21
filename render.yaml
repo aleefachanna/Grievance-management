@@ -1,0 +1,17 @@
+services:
+  # Django Backend Web Service
+  - type: web
+    name: grievance-backend
+    env: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: "http://athidhigrievence.s3-website.ap-south-1.amazonaws.com"
+      - key: DB_URL
+        sync: false # User can configure this in Render dashboard or it will read from their pushed .env / custom variables

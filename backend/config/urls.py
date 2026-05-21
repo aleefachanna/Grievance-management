@@ -28,5 +28,14 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
+from django.views.static import serve
+from django.urls import re_path
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]
